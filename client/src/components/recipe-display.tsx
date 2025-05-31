@@ -20,7 +20,43 @@ export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
   const shareRecipe = (platform: string) => {
     if (!recipe) return;
 
-    const recipeText = `🍳 ${recipe.title}\n\n${recipe.description}\n\n⏱️ Tiempo: ${recipe.cookingTime} min\n👥 Porciones: ${recipe.servings}\n\nGenerado con EcoRecetas IA`;
+    const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+    const instructions = Array.isArray(recipe.instructions) ? recipe.instructions : [];
+
+    // Formatear ingredientes
+    const ingredientsText = ingredients.map((ingredient: any, index: number) => {
+      if (typeof ingredient === 'string') {
+        return `• ${ingredient}`;
+      }
+      const name = ingredient.name || 'Ingrediente';
+      const amount = ingredient.amount || '';
+      return `• ${name}: ${amount}`;
+    }).join('\n');
+
+    // Formatear instrucciones
+    const instructionsText = instructions.map((instruction: any, index: number) => {
+      const stepNumber = typeof instruction === 'object' && instruction.step ? instruction.step : index + 1;
+      const text = typeof instruction === 'string' ? instruction : instruction.instruction || 'Paso de preparación';
+      const time = typeof instruction === 'object' && instruction.time ? ` (${instruction.time} min)` : '';
+      return `${stepNumber}. ${text}${time}`;
+    }).join('\n\n');
+
+    const recipeText = `🍳 ${recipe.title}
+
+📝 ${recipe.description}
+
+⏱️ Tiempo: ${recipe.cookingTime} min
+👥 Porciones: ${recipe.servings} personas
+🔥 Dificultad: ${recipe.difficulty}
+
+🛒 INGREDIENTES:
+${ingredientsText}
+
+👩‍🍳 INSTRUCCIONES:
+${instructionsText}
+
+💡 Generado con EcoRecetas IA`;
+
     const encodedText = encodeURIComponent(recipeText);
     const currentUrl = window.location.href;
 
@@ -37,8 +73,8 @@ export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
         // Instagram no permite enlaces directos, copiamos al portapapeles
         navigator.clipboard.writeText(recipeText).then(() => {
           toast({
-            title: "Copiado al portapapeles",
-            description: "Pega el texto en tu historia de Instagram",
+            title: "Receta copiada al portapapeles",
+            description: "Pega el texto completo en tu historia de Instagram",
           });
         });
         return;
