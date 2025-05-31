@@ -155,7 +155,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const ingredientList = ingredientNames.join(', ');
 
-      const prompt = `Crea una receta DETALLADA usando estos ingredientes: ${ingredientList}
+      const isVariation = preferences?.isVariation;
+      const originalTitle = preferences?.originalTitle;
+      
+      const prompt = `${isVariation ? 
+        `Crea una VARIACIÓN CREATIVA de la receta "${originalTitle}" usando los mismos ingredientes base: ${ingredientList}. 
+        
+        IMPORTANTE: Debe ser una receta DIFERENTE pero usando ingredientes similares. Cambia:
+        - Método de cocción (al horno, a la plancha, guisado, etc.)
+        - Especias y condimentos
+        - Cortes y preparación de ingredientes
+        - Presentación final
+        - Nombre de la receta (debe ser completamente diferente)` 
+        : 
+        `Crea una receta DETALLADA usando estos ingredientes: ${ingredientList}`}
 
 Preferencias:
 - Tipo de comida: ${preferences?.mealType || 'cena'}

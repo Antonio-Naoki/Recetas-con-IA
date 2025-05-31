@@ -6,16 +6,68 @@ import { useRecipes } from "@/hooks/use-recipes";
 import { Clock, Users, Star, Heart, Calendar, Share2, RefreshCw, Check, ShoppingCart } from "lucide-react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface RecipeDisplayProps {
   recipeId: number;
 }
 
 export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
-  const { recipes, isLoading } = useRecipes();
+  const { recipes, isLoading, generateRecipe } = useRecipes();
   const { toast } = useToast();
+  const [isGeneratingVariation, setIsGeneratingVariation] = useState(false);
   
   const recipe = recipes?.find(r => r.id === recipeId);
+
+  const generateVariation = async () => {
+    if (!recipe) return;
+
+    setIsGeneratingVariation(true);
+    
+    try {
+      // Extract ingredient names from the current recipe
+      const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+      const ingredientNames = ingredients.map((ing: any) => 
+        typeof ing === 'string' ? ing : ing.name || 'Ingrediente'
+      );
+
+      // Create preferences based on current recipe but with variation request
+      const preferences = {
+        ingredientNames,
+        mealType: 'dinner',
+        cookingTime: recipe.cookingTime ? `${recipe.cookingTime} minutes` : '30 minutes',
+        difficulty: recipe.difficulty || 'easy',
+        servings: recipe.servings || 4,
+        dietaryRestrictions: [],
+        isVariation: true,
+        originalTitle: recipe.title
+      };
+
+      await generateRecipe(preferences);
+      
+      toast({
+        title: "¡Variación generada!",
+        description: "Se ha creado una nueva variación de tu receta.",
+      });
+
+      // Scroll to the new recipe (it will be added to the list)
+      setTimeout(() => {
+        const element = document.getElementById('generated-recipe');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 500);
+
+    } catch (error) {
+      toast({
+        title: "Error al generar variación",
+        description: "No se pudo generar la variación. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingVariation(false);
+    }
+  };
 
   const shareRecipe = (platform: string) => {
     if (!recipe) return;
@@ -261,9 +313,13 @@ ${instructionsText}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button variant="outline">
-                  <RefreshCw className="mr-2" size={16} />
-                  Generar Variación
+                <Button 
+                  variant="outline"
+                  onClick={generateVariation}
+                  disabled={isGeneratingVariation}
+                >
+                  <RefreshCw className={`mr-2 ${isGeneratingVariation ? 'animate-spin' : ''}`} size={16} />
+                  {isGeneratingVariation ? 'Generando...' : 'Generar Variación'}
                 </Button>
               </div>
             </div>
