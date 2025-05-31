@@ -291,11 +291,6 @@ ${instructionsText}
 
               {/* Recipe Actions */}
               <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-slate-200">
-                <Button className="bg-eco-primary hover:bg-eco-primary/90">
-                  <Calendar className="mr-2" size={16} />
-                  Añadir al Planificador
-                </Button>
-                
                 {/* Share Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
