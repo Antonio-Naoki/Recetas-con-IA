@@ -34,14 +34,9 @@ export function useRecipes() {
   });
 
   const generateRecipeMutation = useMutation({
-    mutationFn: async ({ 
-      ingredientIds, 
-      preferences 
-    }: { 
-      ingredientIds: number[]; 
-      preferences: RecipePreferences 
-    }) => {
-      return await generateRecipeWithAI(ingredientIds, preferences);
+    mutationFn: async (preferences: any) => {
+      const response = await apiRequest("POST", "/api/recipes/generate", { preferences });
+      return response.json();
     },
     onSuccess: (recipe) => {
       queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });

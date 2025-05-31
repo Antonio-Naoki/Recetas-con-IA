@@ -144,30 +144,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Recipe generation route
   app.post("/api/recipes/generate", async (req, res) => {
     try {
-      const { ingredientIds, preferences } = req.body;
+      const { preferences } = req.body;
+      const ingredientNames = preferences?.ingredientNames || [];
       
-      if (!ingredientIds || !Array.isArray(ingredientIds)) {
-        return res.status(400).json({ error: "Invalid ingredient IDs provided" });
-      }
-
-      // Get ingredients
-      const selectedIngredients = [];
-      for (const id of ingredientIds) {
-        const ingredient = await storage.getIngredient(id);
-        if (ingredient) {
-          selectedIngredients.push(ingredient);
-        }
-      }
-
-      if (selectedIngredients.length === 0) {
-        return res.status(400).json({ error: "No valid ingredients found" });
+      if (!ingredientNames || !Array.isArray(ingredientNames) || ingredientNames.length === 0) {
+        return res.status(400).json({ error: "No ingredients provided" });
       }
 
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
-      const ingredientList = selectedIngredients
-        .map(ing => `${ing.name} (${ing.quantity})`)
-        .join(', ');
+      const ingredientList = ingredientNames.join(', ');
 
       const prompt = `Create a recipe using these ingredients: ${ingredientList}
 
