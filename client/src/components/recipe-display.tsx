@@ -1,9 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useRecipes } from "@/hooks/use-recipes";
 import { Clock, Users, Star, Heart, Calendar, Share2, RefreshCw, Check, ShoppingCart } from "lucide-react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { useToast } from "@/hooks/use-toast";
 
 interface RecipeDisplayProps {
   recipeId: number;
@@ -11,8 +13,43 @@ interface RecipeDisplayProps {
 
 export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
   const { recipes, isLoading } = useRecipes();
+  const { toast } = useToast();
   
   const recipe = recipes?.find(r => r.id === recipeId);
+
+  const shareRecipe = (platform: string) => {
+    if (!recipe) return;
+
+    const recipeText = `🍳 ${recipe.title}\n\n${recipe.description}\n\n⏱️ Tiempo: ${recipe.cookingTime} min\n👥 Porciones: ${recipe.servings}\n\nGenerado con EcoRecetas IA`;
+    const encodedText = encodeURIComponent(recipeText);
+    const currentUrl = window.location.href;
+
+    let shareUrl = '';
+
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodedText}`;
+        break;
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(currentUrl)}&text=${encodedText}`;
+        break;
+      case 'instagram':
+        // Instagram no permite enlaces directos, copiamos al portapapeles
+        navigator.clipboard.writeText(recipeText).then(() => {
+          toast({
+            title: "Copiado al portapapeles",
+            description: "Pega el texto en tu historia de Instagram",
+          });
+        });
+        return;
+      default:
+        return;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -146,10 +183,43 @@ export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
                   <Calendar className="mr-2" size={16} />
                   Añadir al Planificador
                 </Button>
-                <Button variant="outline">
-                  <Share2 className="mr-2" size={16} />
-                  Compartir
-                </Button>
+                
+                {/* Share Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <Share2 className="mr-2" size={16} />
+                      Compartir
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => shareRecipe('whatsapp')}>
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 mr-2 bg-green-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">W</span>
+                        </div>
+                        WhatsApp
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => shareRecipe('telegram')}>
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 mr-2 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">T</span>
+                        </div>
+                        Telegram
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => shareRecipe('instagram')}>
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 mr-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">I</span>
+                        </div>
+                        Instagram
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <Button variant="outline">
                   <RefreshCw className="mr-2" size={16} />
                   Generar Variación
