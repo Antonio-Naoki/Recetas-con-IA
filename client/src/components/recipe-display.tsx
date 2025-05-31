@@ -271,15 +271,7 @@ ${instructionsText}
                       )}
                     </div>
                     {typeof ingredient === 'object' && ingredient.available !== undefined ? (
-                      ingredient.available ? (
-                        <Check className="text-eco-fresh" size={16} />
-                      ) : (
-                        <ShoppingCart className="text-amber-500" size={16} />
-                      )
-                    ) : typeof ingredient === 'object' && ingredient.userAdded ? (
                       <Check className="text-eco-fresh" size={16} />
-                    ) : (
-                      <ShoppingCart className="text-amber-500" size={16} />
                     )}
                   </div>
                 ))}
