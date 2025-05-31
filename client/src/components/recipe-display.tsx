@@ -162,9 +162,14 @@ ${instructionsText}
           {/* Recipe Header Image */}
           <div className="h-64 bg-gradient-to-r from-eco-primary/20 to-eco-accent/20 flex items-center justify-center relative overflow-hidden">
             <img 
-              src="https://imgs.search.brave.com/uNpA15Xv4kFAf0ZQTN5l_ocyjwLHM7zf2SGU5x2Uk5Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/Zm90by1ncmF0aXMv/dmlzdGEtc3VwZXJp/b3ItbWVzYS1sbGVu/YS1jb21pZGFfMjMt/MjE0OTIwOTIyNS5q/cGc_c2VtdD1haXNf/aHlicmlkJnc9NzQw" 
+              src={`https://source.unsplash.com/800x400/?food,${encodeURIComponent(recipe.title.toLowerCase().replace(/\s+/g, ','))}`}
               alt={recipe.title}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to a general food image if specific recipe image fails
+                const target = e.target as HTMLImageElement;
+                target.src = `https://source.unsplash.com/800x400/?food,cooking,delicious`;
+              }}
             />
           </div>
           
