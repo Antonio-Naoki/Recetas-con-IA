@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 11% 98%; /* #F5F7FA */
+  --foreground: 210 8% 15%; /* #202631 */
+  --muted: 210 7% 95%; /* #F1F3F5 */
+  --muted-foreground: 210 5% 45%; /* #6B7280 */
+  --popover: 0 0% 100%; /* #FFFFFF */
+  --popover-foreground: 210 8% 15%; /* #202631 */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 210 8% 15%; /* #202631 */
+  --border: 210 7% 90%; /* #E5E7EB */
+  --input: 210 7% 90%; /* #E5E7EB */
+  --primary: 158 64% 30%; /* #059669 */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  --secondary: 45 93% 58%; /* #FCD34D */
+  --secondary-foreground: 45 30% 20%; /* #78350F */
+  --accent: 24 95% 53%; /* #F97316 */
+  --accent-foreground: 0 0% 100%; /* #FFFFFF */
+  --destructive: 0 72% 51%; /* #DC2626 */
+  --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+  --ring: 158 64% 30%; /* #059669 */
+  --radius: 0.5rem;
+  
+  /* Custom eco colors */
+  --eco-primary: 158 64% 30%; /* #059669 */
+  --eco-secondary: 45 93% 58%; /* #FCD34D */
+  --eco-accent: 24 95% 53%; /* #F97316 */
+  --eco-expired: 0 72% 51%; /* #DC2626 */
+  --eco-expiring: 45 93% 58%; /* #FBBF24 */
+  --eco-fresh: 158 64% 52%; /* #10B981 */
+}
+
+.dark {
+  --background: 210 11% 8%; /* #1A1F2E */
+  --foreground: 210 7% 95%; /* #F1F3F5 */
+  --muted: 210 10% 15%; /* #252A3A */
+  --muted-foreground: 210 5% 65%; /* #9CA3AF */
+  --popover: 210 11% 8%; /* #1A1F2E */
+  --popover-foreground: 210 7% 95%; /* #F1F3F5 */
+  --card: 210 11% 8%; /* #1A1F2E */
+  --card-foreground: 210 7% 95%; /* #F1F3F5 */
+  --border: 210 10% 20%; /* #374151 */
+  --input: 210 10% 20%; /* #374151 */
+  --primary: 158 64% 30%; /* #059669 */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  --secondary: 45 93% 58%; /* #FCD34D */
+  --secondary-foreground: 45 30% 20%; /* #78350F */
+  --accent: 24 95% 53%; /* #F97316 */
+  --accent-foreground: 0 0% 100%; /* #FFFFFF */
+  --destructive: 0 72% 51%; /* #DC2626 */
+  --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+  --ring: 158 64% 30%; /* #059669 */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer utilities {
+  .eco-primary {
+    color: hsl(var(--eco-primary));
+  }
+  
+  .bg-eco-primary {
+    background-color: hsl(var(--eco-primary));
+  }
+  
+  .eco-secondary {
+    color: hsl(var(--eco-secondary));
+  }
+  
+  .bg-eco-secondary {
+    background-color: hsl(var(--eco-secondary));
+  }
+  
+  .eco-accent {
+    color: hsl(var(--eco-accent));
+  }
+  
+  .bg-eco-accent {
+    background-color: hsl(var(--eco-accent));
+  }
+  
+  .eco-fresh {
+    color: hsl(var(--eco-fresh));
+  }
+  
+  .bg-eco-fresh {
+    background-color: hsl(var(--eco-fresh));
+  }
+  
+  .eco-expiring {
+    color: hsl(var(--eco-expiring));
+  }
+  
+  .bg-eco-expiring {
+    background-color: hsl(var(--eco-expiring));
+  }
+  
+  .eco-expired {
+    color: hsl(var(--eco-expired));
+  }
+  
+  .bg-eco-expired {
+    background-color: hsl(var(--eco-expired));
+  }
+}

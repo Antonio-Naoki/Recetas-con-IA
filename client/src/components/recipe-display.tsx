@@ -1,0 +1,163 @@
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useRecipes } from "@/hooks/use-recipes";
+import { Clock, Users, Star, Heart, Calendar, Share2, RefreshCw, Check, ShoppingCart } from "lucide-react";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+
+interface RecipeDisplayProps {
+  recipeId: number;
+}
+
+export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
+  const { recipes, isLoading } = useRecipes();
+  
+  const recipe = recipes?.find(r => r.id === recipeId);
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!recipe) {
+    return null;
+  }
+
+  const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+  const instructions = Array.isArray(recipe.instructions) ? recipe.instructions : [];
+  const dietaryTags = Array.isArray(recipe.dietaryTags) ? recipe.dietaryTags : [];
+
+  return (
+    <section id="generated-recipe" className="mb-12">
+      <Card className="overflow-hidden">
+        <div className="relative">
+          {/* Recipe Header Image */}
+          <div className="h-64 bg-gradient-to-r from-eco-primary/20 to-eco-accent/20 flex items-center justify-center">
+            {recipe.imageUrl ? (
+              <img 
+                src={recipe.imageUrl} 
+                alt={recipe.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-center">
+                <div className="text-6xl mb-4">🍽️</div>
+                <p className="text-slate-600">Imagen de receta generada</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+          <div className="absolute bottom-4 left-4 text-white">
+            <h2 className="text-3xl font-bold mb-2">{recipe.title}</h2>
+            <div className="flex items-center space-x-4 text-sm">
+              <span className="flex items-center space-x-1">
+                <Clock size={16} />
+                <span>{recipe.cookingTime} minutos</span>
+              </span>
+              <span className="flex items-center space-x-1">
+                <Users size={16} />
+                <span>{recipe.servings} personas</span>
+              </span>
+              <span className="flex items-center space-x-1">
+                <Star size={16} />
+                <span className="capitalize">{recipe.difficulty}</span>
+              </span>
+            </div>
+          </div>
+          <Button 
+            size="sm"
+            variant="secondary"
+            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white border-white/20"
+          >
+            <Heart size={16} />
+          </Button>
+        </div>
+
+        <div className="p-6">
+          {/* Recipe Description */}
+          {recipe.description && (
+            <p className="text-slate-700 mb-6">{recipe.description}</p>
+          )}
+
+          {/* Dietary Tags */}
+          {dietaryTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {dietaryTags.map((tag: string) => (
+                <Badge key={tag} variant="secondary" className="bg-eco-primary/10 text-eco-primary">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Ingredients List */}
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Ingredientes</h3>
+              <div className="space-y-3">
+                {ingredients.map((ingredient: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm font-medium">
+                      {typeof ingredient === 'string' ? ingredient : ingredient.name || ingredient.amount || 'Ingrediente'}
+                    </span>
+                    {typeof ingredient === 'object' && ingredient.available !== undefined ? (
+                      ingredient.available ? (
+                        <Check className="text-eco-fresh" size={16} />
+                      ) : (
+                        <ShoppingCart className="text-slate-400" size={16} />
+                      )
+                    ) : (
+                      <Check className="text-eco-fresh" size={16} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="lg:col-span-2">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Instrucciones</h3>
+              <div className="space-y-4">
+                {instructions.map((instruction: any, index: number) => (
+                  <div key={index} className="flex space-x-4">
+                    <div className="w-8 h-8 bg-eco-primary text-white rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                      {typeof instruction === 'object' && instruction.step ? instruction.step : index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-slate-700">
+                        {typeof instruction === 'string' ? instruction : instruction.instruction || 'Paso de preparación'}
+                      </p>
+                      {typeof instruction === 'object' && instruction.time && (
+                        <p className="text-sm text-slate-500 mt-1">{instruction.time} minutos</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recipe Actions */}
+              <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-slate-200">
+                <Button className="bg-eco-primary hover:bg-eco-primary/90">
+                  <Calendar className="mr-2" size={16} />
+                  Añadir al Planificador
+                </Button>
+                <Button variant="outline">
+                  <Share2 className="mr-2" size={16} />
+                  Compartir
+                </Button>
+                <Button variant="outline">
+                  <RefreshCw className="mr-2" size={16} />
+                  Generar Variación
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </section>
+  );
+}
