@@ -74,15 +74,15 @@ export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
           {/* Recipe Header Image */}
           <div className="h-64 bg-gradient-to-r from-eco-primary/20 to-eco-accent/20 flex items-center justify-center relative overflow-hidden">
             <img 
-              src="https://imgs.search.brave.com/PimXSQve_O-CnrVt2PwaVUc17vD38BrEEDmmUcGhO1Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTMz/NzQ2Nzc1NC9lcy9m/b3RvL2ZvdG8tZGUt/dmlzdGEtc3VwZXJp/b3ItZW4tcHJpbWVy/YS1wZXJzb25hLWRl/LWxhcy1tYW5vcy1k/ZS1sYS1tdWplci1z/b3N0ZW5pZW5kby1s/YS1sb25jaGVyYS1j/b24uanBnP3M9NjEy/eDYxMiZ3PTAmaz0y/MCZjPTAxZUFDZXBQ/UFhjc0FTNEJRTk8x/ZDZiUkZrczEzUDQ4/MDZfZExHZnpKckk9" 
+              src="https://imgs.search.brave.com/uNpA15Xv4kFAf0ZQTN5l_ocyjwLHM7zf2SGU5x2Uk5Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/Zm90by1ncmF0aXMv/dmlzdGEtc3VwZXJp/b3ItbWVzYS1sbGVu/YS1jb21pZGFfMjMt/MjE0OTIwOTIyNS5q/cGc_c2VtdD1haXNf/aHlicmlkJnc9NzQw" 
               alt={recipe.title}
               className="w-full h-full object-cover"
             />
           </div>
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-          <div className="absolute bottom-4 left-4 text-white">
-            <h2 className="text-3xl font-bold mb-2">{recipe.title}</h2>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          <div className="absolute bottom-4 left-4 text-white drop-shadow-lg">
+            <h2 className="text-3xl font-bold mb-2 text-white drop-shadow-md">{recipe.title}</h2>
             <div className="flex items-center space-x-4 text-sm">
               <span className="flex items-center space-x-1">
                 <Clock size={16} />
