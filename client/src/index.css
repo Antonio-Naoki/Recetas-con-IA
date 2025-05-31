@@ -33,6 +33,31 @@
   --eco-fresh: 157 50% 72%; /* #A8E6CF */
 }
 
+/* Utility classes for better ingredient status display */
+.text-eco-fresh {
+  color: hsl(var(--eco-fresh));
+}
+
+.text-eco-expiring {
+  color: hsl(var(--eco-expiring));
+}
+
+.text-eco-expired {
+  color: hsl(var(--eco-expired));
+}
+
+.bg-eco-fresh {
+  background-color: hsl(var(--eco-fresh));
+}
+
+.bg-eco-expiring {
+  background-color: hsl(var(--eco-expiring));
+}
+
+.bg-eco-expired {
+  background-color: hsl(var(--eco-expired));
+}
+
 .dark {
   --background: 210 11% 8%; /* #1A1F2E */
   --foreground: 210 7% 95%; /* #F1F3F5 */

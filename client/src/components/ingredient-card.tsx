@@ -104,9 +104,9 @@ export default function IngredientCard({
         {ingredient.quantity}
       </p>
       <p className={`text-xs font-medium ${
-        ingredient.status === 'fresh' ? 'eco-fresh' : 
-        ingredient.status === 'expiring' ? 'eco-expiring' : 
-        'eco-expired'
+        ingredient.status === 'fresh' ? 'text-emerald-600' : 
+        ingredient.status === 'expiring' ? 'text-amber-600' : 
+        'text-red-600'
       }`}>
         {getStatusText(ingredient.status)}
         {daysLeft !== null && (

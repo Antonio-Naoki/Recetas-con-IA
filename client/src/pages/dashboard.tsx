@@ -53,16 +53,42 @@ export default function Dashboard() {
   };
 
   const handleGenerateRecipe = async () => {
-    if (ingredients.length === 0) return;
-    
-    try {
-      const recipe = await generateRecipe({
-        ...preferences,
-        ingredientNames: ingredients
+    if (ingredients.length === 0) {
+      toast({
+        title: "Error",
+        description: "Por favor añade al menos un ingrediente para generar una receta.",
+        variant: "destructive",
       });
-      setGeneratedRecipeId(recipe.id);
+      return;
+    }
+
+    try {
+      const recipePreferences = {
+        ingredientNames: ingredients,
+        ...preferences,
+        specialInstructions: `Crea una receta usando principalmente estos ingredientes: ${ingredients.join(', ')}. La receta debe ser ${preferences.difficulty} de preparar y servir para ${preferences.servings} personas.`
+      };
+
+      const recipe = await generateRecipe(recipePreferences);
+      if (recipe && recipe.id) {
+        setGeneratedRecipeId(recipe.id);
+        // Scroll to recipe after generation
+        setTimeout(() => {
+          const element = document.getElementById('generated-recipe');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        throw new Error('No se pudo generar la receta');
+      }
     } catch (error) {
-      console.error("Failed to generate recipe:", error);
+      console.error('Error generating recipe:', error);
+      toast({
+        title: "Error al generar receta",
+        description: "Hubo un problema al generar la receta. Por favor intenta de nuevo.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -85,7 +111,7 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
-      
+
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Main Recipe Generator */}
         <Card className="overflow-hidden">

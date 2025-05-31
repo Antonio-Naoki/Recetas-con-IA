@@ -12,11 +12,17 @@ interface RecipeDisplayProps {
   recipeId: number;
 }
 
-const foodKeywords = ['pizza', 'burger', 'pasta', 'salad', 'steak', 'sushi', 'taco', 'sandwich', 'soup', 'dessert', 'cake', 'pie', 'chocolate', 'fruit', 'vegetable', 'chicken', 'fish', 'rice', 'bread', 'egg'];
+const foodKeywords = [
+  'pizza', 'burger', 'pasta', 'salad', 'steak', 'sushi', 'taco', 'sandwich', 'soup', 'dessert', 
+  'cake', 'pie', 'chocolate', 'fruit', 'vegetable', 'chicken', 'fish', 'rice', 'bread', 'egg',
+  'pollo', 'carne', 'pescado', 'verdura', 'fruta', 'ensalada', 'sopa', 'postre', 'arroz', 'pan',
+  'huevo', 'queso', 'tomate', 'cebolla', 'ajo', 'papas', 'patatas', 'guiso', 'asado', 'frito'
+];
 
 const getFoodImageUrl = (recipeTitle: string): string => {
-  const keyword = foodKeywords.find(k => recipeTitle.toLowerCase().includes(k)) || 'food';
-  return `https://source.unsplash.com/800x400/?${keyword}&q=80`;
+  const title = recipeTitle.toLowerCase();
+  const keyword = foodKeywords.find(k => title.includes(k)) || 'delicious-food';
+  return `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=400&fit=crop&q=80&auto=format`;
 };
 
 export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
