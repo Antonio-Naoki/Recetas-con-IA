@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
-import { GoogleGenerativeAI } from "@google/ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { storage } from "./storage";
 import { insertIngredientSchema, insertRecipeSchema, insertRecipePreferencesSchema } from "@shared/schema";
 import { z } from "zod";
