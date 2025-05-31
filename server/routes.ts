@@ -8,6 +8,120 @@ import { z } from "zod";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Helper functions for advanced AI prompts
+function getAIPersonalityPrompt(personality: string): string {
+  const personalities = {
+    creative: "Eres un chef innovador y artístico. Combinas sabores de formas inesperadas, experimentas con texturas únicas y creas presentaciones visualmente impactantes. Siempre buscas la sorpresa culinaria.",
+    health: "Eres un chef especializado en nutrición funcional. Cada ingrediente tiene un propósito nutricional específico. Maximizas beneficios para la salud usando técnicas que preservan nutrientes.",
+    traditional: "Eres un chef maestro en técnicas clásicas. Respetas las tradiciones culinarias pero las perfeccionas. Tus recetas son atemporales y reconfortantes.",
+    fusion: "Eres un chef globalizado que mezcla culturas culinarias audazmente. Combinas técnicas orientales con sabores latinos, europeos con asiáticos, creando armonías únicas.",
+    quick: "Eres un chef eficiente y práctico. Optimizas cada paso para velocidad sin sacrificar sabor. Usas técnicas inteligentes y shortcuts profesionales."
+  };
+  return personalities[personality as keyof typeof personalities] || personalities.creative;
+}
+
+function buildAdvancedParametersPrompt(preferences: any): string {
+  let prompt = `
+PARÁMETROS AVANZADOS:
+- Tipo de comida: ${preferences.mealType || 'cena'}
+- Tiempo máximo: ${preferences.cookingTime || '30 minutos'}
+- Dificultad: ${preferences.difficulty || 'fácil'}
+- Porciones: ${preferences.servings || 4}
+- Presupuesto: ${preferences.budget || 'medio'}
+- Enfoque de salud: ${preferences.healthFocus || 'equilibrado'}
+- Restricciones: ${preferences.dietaryRestrictions?.join(', ') || 'ninguna'}`;
+
+  if (preferences.nutritionalGoals) {
+    prompt += `
+
+OBJETIVOS NUTRICIONALES ESPECÍFICOS:
+- Calorías por porción: ${preferences.nutritionalGoals.calories}
+- Proteína: ${preferences.nutritionalGoals.protein}g
+- Carbohidratos: ${preferences.nutritionalGoals.carbs}g
+- Grasa: ${preferences.nutritionalGoals.fat}g
+- Fibra: ${preferences.nutritionalGoals.fiber}g`;
+  }
+
+  if (preferences.culinaryPreferences) {
+    prompt += `
+
+PREFERENCIAS CULINARIAS AVANZADAS:
+- Estilos de cocina: ${preferences.culinaryPreferences.cuisineTypes?.join(', ') || 'libre'}
+- Nivel de picante: ${['muy suave', 'suave', 'medio', 'picante', 'muy picante'][preferences.culinaryPreferences.spiceLevel - 1] || 'medio'}
+- Métodos preferidos: ${preferences.culinaryPreferences.cookingMethods?.join(', ') || 'variados'}`;
+  }
+
+  if (preferences.sustainabilityMode) {
+    prompt += `
+
+🌱 MODO SOSTENIBILIDAD ACTIVADO:
+- Prioriza ingredientes locales y de temporada
+- Minimiza desperdicio alimentario (usa tallos, cáscaras, etc.)
+- Técnicas de cocción eficientes energéticamente
+- Reduce huella de carbono en selección de ingredientes
+- Enfoque en ingredientes orgánicos y de producción local`;
+  }
+
+  return prompt;
+}
+
+function getResponseFormat(isWeeklyPlan: boolean, nutritionOptimization: boolean): string {
+  if (isWeeklyPlan) {
+    return `Responde únicamente con un JSON válido con esta estructura exacta para el plan semanal.`;
+  }
+
+  const baseFormat = `
+{
+  "title": "Nombre creativo y apetitoso",
+  "description": "Descripción detallada que incluya beneficios nutricionales y experiencia gastronómica",
+  "cookingTime": 30,
+  "servings": 4,
+  "difficulty": "fácil",
+  "ingredients": [
+    {
+      "name": "Ingrediente específico",
+      "amount": "cantidad precisa",
+      "preparation": "preparación específica (picado, rallado, etc.)",
+      "substitutes": ["sustituto1", "sustituto2"]
+    }
+  ],
+  "instructions": [
+    {
+      "step": 1,
+      "instruction": "Instrucción muy detallada con técnicas específicas",
+      "time": 5,
+      "temperature": "temperatura si aplica",
+      "technique": "técnica culinaria específica",
+      "tips": "consejo profesional"
+    }
+  ],
+  "dietaryTags": ["tag nutricional", "tag de cocina", "tag de dificultad"],
+  "cookingTips": ["consejo profesional 1", "consejo profesional 2"],
+  "servingSuggestions": ["sugerencia de acompañamiento 1", "sugerencia 2"]`;
+
+  if (nutritionOptimization) {
+    return baseFormat + `,
+  "nutritionalInfo": {
+    "calories": "calorías estimadas por porción",
+    "protein": "gramos de proteína",
+    "carbs": "gramos de carbohidratos",
+    "fat": "gramos de grasa",
+    "fiber": "gramos de fibra",
+    "vitamins": ["vitamina principal 1", "vitamina principal 2"],
+    "minerals": ["mineral principal 1", "mineral principal 2"]
+  },
+  "healthBenefits": ["beneficio de salud 1", "beneficio de salud 2"]
+}
+
+Responde únicamente con este JSON válido.`;
+  }
+
+  return baseFormat + `
+}
+
+Responde únicamente con este JSON válido.`;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Gemini AI
   const genAI = new GoogleGenerativeAI(
@@ -145,10 +259,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/recipes/generate", async (req, res) => {
   try {
     const { preferences } = req.body;
-    console.log('Received preferences:', preferences);
+    console.log('Received advanced preferences:', preferences);
 
-    // Initialize the model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Initialize the model with advanced configuration
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        temperature: preferences.aiPersonality === 'creative' ? 1.2 : 0.8,
+        topK: 40,
+        topP: 0.95,
+      }
+    });
 
     // Handle different input formats
     let ingredientNames: string[] = [];
@@ -156,80 +277,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (preferences.ingredientNames && Array.isArray(preferences.ingredientNames)) {
       ingredientNames = preferences.ingredientNames;
     } else if (preferences.ingredientIds && Array.isArray(preferences.ingredientIds)) {
-      // If we have ingredient IDs, we would normally fetch them from database
-      // For now, we'll use some default ingredients
       ingredientNames = ['tomate', 'cebolla', 'ajo'];
     }
 
-    // Create specialized prompt for variations
+    // Build advanced AI prompt
     let prompt;
-    if (preferences.isVariation && preferences.originalRecipe) {
-      prompt = `Genera una variación creativa de una receta existente en español:
+    
+    if (preferences.weeklyPlan) {
+      // Weekly plan generation
+      prompt = `Actúa como un CHEF PROFESIONAL CON IA AVANZADA y crea un PLAN SEMANAL de 7 recetas diferentes usando principalmente estos ingredientes: ${ingredientNames.join(', ')}.
+
+CARACTERÍSTICAS DEL CHEF IA:
+${getAIPersonalityPrompt(preferences.aiPersonality)}
+
+PARÁMETROS NUTRICIONALES:
+${preferences.nutritionalGoals ? `
+- Calorías objetivo por porción: ${preferences.nutritionalGoals.calories}
+- Proteína: ${preferences.nutritionalGoals.protein}g
+- Carbohidratos: ${preferences.nutritionalGoals.carbs}g
+- Grasa: ${preferences.nutritionalGoals.fat}g
+- Fibra: ${preferences.nutritionalGoals.fiber}g` : 'Equilibrio nutricional estándar'}
+
+PREFERENCIAS CULINARIAS:
+- Tipos de cocina: ${preferences.culinaryPreferences?.cuisineTypes?.join(', ') || 'variada'}
+- Nivel de picante: ${['muy suave', 'suave', 'medio', 'picante', 'muy picante'][preferences.culinaryPreferences?.spiceLevel - 1] || 'medio'}
+- Métodos de cocción: ${preferences.culinaryPreferences?.cookingMethods?.join(', ') || 'variados'}
+
+CONFIGURACIÓN AVANZADA:
+- Tipo de comida: ${preferences.mealType || 'cena'}
+- Tiempo máximo: ${preferences.cookingTime || '30 minutos'}
+- Dificultad: ${preferences.difficulty || 'fácil'}
+- Porciones: ${preferences.servings || 4}
+- Presupuesto: ${preferences.budget || 'medio'}
+- Enfoque de salud: ${preferences.healthFocus || 'equilibrado'}
+- Restricciones: ${preferences.dietaryRestrictions?.join(', ') || 'ninguna'}
+
+${preferences.sustainabilityMode ? `
+MODO SOSTENIBILIDAD ACTIVADO:
+- Prioriza ingredientes locales y de temporada
+- Minimiza el desperdicio alimentario
+- Usa técnicas de cocción eficientes energéticamente
+- Reduce la huella de carbono` : ''}
+
+INSTRUCCIONES ESPECIALES: ${preferences.specialInstructions || 'Crea recetas deliciosas y variadas'}
+
+Responde con un JSON que contenga un array de 7 recetas diferentes para cada día de la semana:
+{
+  "weeklyPlan": true,
+  "totalRecipes": 7,
+  "recipes": [
+    {
+      "day": "Lunes",
+      "title": "Nombre de la receta",
+      "description": "Descripción con información nutricional estimada",
+      "cookingTime": 30,
+      "servings": 4,
+      "difficulty": "fácil",
+      "ingredients": [{"name": "Ingrediente", "amount": "cantidad", "nutritionalValue": "valor nutricional estimado"}],
+      "instructions": [{"step": 1, "instruction": "Instrucción detallada", "time": 5, "technique": "técnica específica"}],
+      "nutritionalInfo": {
+        "calories": 400,
+        "protein": 25,
+        "carbs": 45,
+        "fat": 18,
+        "fiber": 8
+      },
+      "sustainabilityScore": 8,
+      "dietaryTags": ["tag1", "tag2"],
+      "cookingTips": ["tip1", "tip2"]
+    }
+  ]
+}`;
+    } else if (preferences.isVariation && preferences.originalRecipe) {
+      // Variation generation with advanced features
+      prompt = `Actúa como un CHEF PROFESIONAL CON IA AVANZADA y crea una variación REVOLUCIONARIA de esta receta:
 
 RECETA ORIGINAL: "${preferences.originalRecipe.title}"
-INGREDIENTES ORIGINALES: ${preferences.originalRecipe.ingredients?.join(', ') || ingredientNames.join(', ')}
+INGREDIENTES BASE: ${preferences.originalRecipe.ingredients?.join(', ') || ingredientNames.join(', ')}
 
-INSTRUCCIONES PARA LA VARIACIÓN:
-${preferences.specialInstructions || 'Crea una variación interesante cambiando la técnica de cocción, especias, o presentación'}
+PERSONALIDAD DEL CHEF IA:
+${getAIPersonalityPrompt(preferences.aiPersonality)}
 
-PARÁMETROS:
-- Tipo de comida: ${preferences.mealType || 'cena'}
-- Tiempo de cocción: ${preferences.cookingTime || '30 minutos'}
-- Dificultad: ${preferences.difficulty || 'fácil'}
-- Porciones: ${preferences.servings || 4}
-- Restricciones dietéticas: ${preferences.dietaryRestrictions?.join(', ') || 'ninguna'}
+INSTRUCCIONES PARA VARIACIÓN AVANZADA:
+${preferences.specialInstructions || 'Crea una variación que sorprenda manteniendo la esencia original'}
 
-IMPORTANTE: 
-- Crea una receta DIFERENTE pero inspirada en la original
-- Cambia al menos 2-3 ingredientes o la técnica de cocción
-- Mantén el espíritu del plato pero hazlo único
-- Debe ser una receta completamente nueva, no una copia
+${buildAdvancedParametersPrompt(preferences)}
 
-Responde únicamente con un JSON válido con esta estructura exacta:
-{
-  "title": "Nombre de la receta variada (debe ser diferente al original)",
-  "description": "Descripción que mencione que es una variación creativa",
-  "cookingTime": 30,
-  "servings": 4,
-  "difficulty": "fácil",
-  "ingredients": [
-    {"name": "Ingrediente 1", "amount": "cantidad"},
-    {"name": "Ingrediente 2", "amount": "cantidad"}
-  ],
-  "instructions": [
-    {"step": 1, "instruction": "Primera instrucción", "time": 5},
-    {"step": 2, "instruction": "Segunda instrucción", "time": 10}
-  ],
-  "dietaryTags": ["variación", "tag2"]
-}`;
+IMPORTANTE - VARIACIÓN INTELIGENTE:
+- Transforma al menos 40% de los ingredientes o técnicas
+- Mantén la esencia pero revolutiona la presentación
+- Añade elementos sorpresa basados en tu personalidad IA
+- Debe ser una receta completamente nueva e innovadora
+
+${getResponseFormat(false, preferences.nutritionOptimization)}`;
     } else {
-      prompt = `Genera una receta en español con los siguientes parámetros:
-- Ingredientes disponibles: ${ingredientNames.join(', ')}
-- Tipo de comida: ${preferences.mealType || 'cena'}
-- Tiempo de cocción: ${preferences.cookingTime || '30 minutos'}
-- Dificultad: ${preferences.difficulty || 'fácil'}
-- Porciones: ${preferences.servings || 4}
-- Restricciones dietéticas: ${preferences.dietaryRestrictions?.join(', ') || 'ninguna'}
+      // Standard advanced recipe generation
+      prompt = `Actúa como un CHEF PROFESIONAL CON IA SÚPER AVANZADA y crea la RECETA PERFECTA con estos ingredientes: ${ingredientNames.join(', ')}.
 
-Responde únicamente con un JSON válido con esta estructura exacta:
-{
-  "title": "Nombre de la receta",
-  "description": "Descripción breve y apetitosa",
-  "cookingTime": 30,
-  "servings": 4,
-  "difficulty": "fácil",
-  "ingredients": [
-    {"name": "Ingrediente 1", "amount": "cantidad"},
-    {"name": "Ingrediente 2", "amount": "cantidad"}
-  ],
-  "instructions": [
-    {"step": 1, "instruction": "Primera instrucción", "time": 5},
-    {"step": 2, "instruction": "Segunda instrucción", "time": 10}
-  ],
-  "dietaryTags": ["tag1", "tag2"]
-}
+PERSONALIDAD DEL CHEF IA:
+${getAIPersonalityPrompt(preferences.aiPersonality)}
 
-Usa ingredientes comunes de cocina española y latinoamericana. Asegúrate de que sea una receta práctica y deliciosa.`;
+${buildAdvancedParametersPrompt(preferences)}
+
+INSTRUCCIONES ESPECIALES DEL USUARIO: ${preferences.specialInstructions || 'Crea una receta excepcional'}
+
+MISIÓN: Crea una receta que sea perfecta según todos los parámetros especificados. Debe ser innovadora, deliciosa y perfectamente equilibrada.
+
+${getResponseFormat(false, preferences.nutritionOptimization)}`;
     }
 
     const result = await model.generateContent(prompt);

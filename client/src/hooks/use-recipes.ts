@@ -76,43 +76,73 @@ export function useRecipes() {
     },
   });
 
-  const generateRecipe = async (preferences: RecipePreferences): Promise<Recipe> => {
+  const generateRecipe = async (preferences: any): Promise<Recipe> => {
     const response = await fetch('/api/recipes/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(preferences),
+      body: JSON.stringify({ preferences }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate recipe');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to generate recipe');
     }
 
     const recipe = await response.json();
 
-    // Mark ingredients that were provided by the user
-    if (recipe.ingredients && Array.isArray(recipe.ingredients) && preferences.ingredientNames) {
-      recipe.ingredients = recipe.ingredients.map((ingredient: any) => {
-        if (typeof ingredient === 'object' && ingredient.name) {
-          const isUserIngredient = preferences.ingredientNames.some((userIngredient: string) => 
-            ingredient.name.toLowerCase().includes(userIngredient.toLowerCase()) ||
-            userIngredient.toLowerCase().includes(ingredient.name.toLowerCase())
-          );
-          return {
-            ...ingredient,
-            userAdded: isUserIngredient,
-            available: isUserIngredient
-          };
+    // Handle weekly plan or single recipe
+    if (recipe.weeklyPlan && recipe.recipes) {
+      // For weekly plans, we might want to store each recipe separately
+      for (const dailyRecipe of recipe.recipes) {
+        // Mark ingredients that were provided by the user
+        if (dailyRecipe.ingredients && Array.isArray(dailyRecipe.ingredients) && preferences.ingredientNames) {
+          dailyRecipe.ingredients = dailyRecipe.ingredients.map((ingredient: any) => {
+            if (typeof ingredient === 'object' && ingredient.name) {
+              const isUserIngredient = preferences.ingredientNames.some((userIngredient: string) => 
+                ingredient.name.toLowerCase().includes(userIngredient.toLowerCase()) ||
+                userIngredient.toLowerCase().includes(ingredient.name.toLowerCase())
+              );
+              return {
+                ...ingredient,
+                userAdded: isUserIngredient,
+                available: isUserIngredient
+              };
+            }
+            return ingredient;
+          });
         }
-        return ingredient;
-      });
+      }
+      
+      // Return the first recipe for display, but you could implement a week view
+      const firstRecipe = recipe.recipes[0];
+      firstRecipe.weeklyPlan = recipe;
+      
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      return firstRecipe;
+    } else {
+      // Single recipe handling
+      if (recipe.ingredients && Array.isArray(recipe.ingredients) && preferences.ingredientNames) {
+        recipe.ingredients = recipe.ingredients.map((ingredient: any) => {
+          if (typeof ingredient === 'object' && ingredient.name) {
+            const isUserIngredient = preferences.ingredientNames.some((userIngredient: string) => 
+              ingredient.name.toLowerCase().includes(userIngredient.toLowerCase()) ||
+              userIngredient.toLowerCase().includes(ingredient.name.toLowerCase())
+            );
+            return {
+              ...ingredient,
+              userAdded: isUserIngredient,
+              available: isUserIngredient
+            };
+          }
+          return ingredient;
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      return recipe;
     }
-
-    // Refresh the recipes list to include the new recipe
-    queryClient.invalidateQueries({ queryKey: ['recipes'] });
-
-    return recipe;
   };
 
   return {
