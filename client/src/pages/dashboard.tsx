@@ -88,9 +88,19 @@ export default function Dashboard() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Main Recipe Generator */}
         <Card className="overflow-hidden">
-          <div className="bg-gradient-to-r from-eco-primary to-emerald-700 p-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Generador de Recetas con IA</h2>
-            <p className="text-emerald-100">Crea recetas personalizadas con ingredientes que tienes disponibles</p>
+          <div className="relative h-48 overflow-hidden">
+            <img 
+              src="https://imgs.search.brave.com/uNpA15Xv4kFAf0ZQTN5l_ocyjwLHM7zf2SGU5x2Uk5Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/Zm90by1ncmF0aXMv/dmlzdGEtc3VwZXJp/b3ItbWVzYS1sbGVu/YS1jb21pZGFfMjMt/MjE0OTIwOTIyNS5q/cGc_c2VtdD1haXNf/aHlicmlkJnc9NzQw" 
+              alt="Mesa con comida"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-eco-primary/90 to-emerald-700/90"></div>
+            <div className="absolute inset-0 flex items-center justify-center p-8">
+              <div className="text-center text-white">
+                <h2 className="text-3xl font-bold mb-2 drop-shadow-md">Generador de Recetas con IA</h2>
+                <p className="text-emerald-100 drop-shadow-sm">Crea recetas personalizadas con ingredientes que tienes disponibles</p>
+              </div>
+            </div>
           </div>
 
           <div className="p-8">
