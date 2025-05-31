@@ -1,0 +1,64 @@
+EcoRecetas Inteligentes (Aplicación Web)
+Concepto Central: Una aplicación web que ayuda a los usuarios a reducir el desperdicio de alimentos y a cocinar de forma más inteligente, utilizando IA para identificar ingredientes y generar recetas personalizadas a partir de lo que ya tienen.
+
+Componentes Clave de la Aplicación Web:
+Frontend (Interfaz de Usuario):
+
+Tecnologías:
+Frameworks JavaScript: React, Vue.js, o Angular son excelentes opciones para crear interfaces de usuario dinámicas y reactivas.
+HTML/CSS: Para la estructura y el diseño visual.
+Responsive Design: Imprescindible para que la app se vea bien y funcione en desktops, tablets y móviles.
+Características:
+Página de Inicio/Dashboard: Resumen de ingredientes a punto de caducar, sugerencias rápidas.
+Sección "Mis Ingredientes":
+Botón para subir imagen: Permite al usuario tomar/subir una foto de su nevera o un ingrediente.
+Formulario de entrada manual: Para añadir ingredientes que no sean fácilmente detectables por foto o para corregir.
+Listado visual de ingredientes: Con iconos, fechas de caducidad destacadas.
+Generador de Recetas: Interfaz para solicitar una receta, con filtros (tipo de comida, tiempo de cocción, dificultad, restricciones dietéticas).
+Detalle de Receta: Instrucciones paso a paso, lista de ingredientes, consejos de preparación.
+Planificador Semanal: Calendario para arrastrar y soltar recetas.
+Perfil de Usuario: Para guardar preferencias, historial de recetas, restricciones dietéticas.
+Backend (Servidor y Lógica de Negocio):
+
+Tecnologías:
+Lenguajes de Servidor: Node.js (con Express.js), Python (con Flask/Django), o Go son opciones populares y eficientes.
+Base de Datos:
+NoSQL (ej. MongoDB, Firestore): Ideal para almacenar datos de usuarios, ingredientes, y recetas generadas de forma flexible.
+SQL (ej. PostgreSQL, MySQL): Si necesitas relaciones de datos más complejas (aunque menos probable para este caso de uso inicial).
+Funcionalidades:
+Autenticación de Usuarios: Registro, inicio de sesión (puedes usar Firebase Authentication para simplificar).
+API para el Frontend: Endpoint RESTful para que el frontend pueda enviar y recibir datos (ingredientes, solicitudes de recetas, etc.).
+Integración con la API de Gemini: Aquí es donde el backend se comunica con Google para las funcionalidades de IA.
+Lógica de Negocio: Gestionar la base de datos de ingredientes de cada usuario, procesar las solicitudes de IA, etc.
+Integración de la IA con la API de Gemini:
+
+Reconocimiento de Ingredientes (Gemini-Pro-Vision):
+
+Frontend: El usuario sube una imagen.
+Backend: La imagen se envía al servidor.
+Backend (Lógica AI): El servidor usa la SDK de Gemini (ej. google-generativeai para Python/Node.js) para enviar la imagen a gemini-pro-vision junto con un prompt como: "Identifica los ingredientes comestibles en esta imagen y estima sus cantidades. Lista solo el nombre del ingrediente. Por ejemplo: [zanahoria, tomate, cebolla, etc.]".
+Backend: Procesa la respuesta de Gemini, que será una lista de ingredientes identificados.
+Frontend: Muestra al usuario los ingredientes detectados para que los confirme o corrija, y luego los guarda en su lista.
+Generación de Recetas (Gemini-Pro):
+
+Frontend: El usuario selecciona "Generar Receta" y la app envía al backend su lista actual de ingredientes (con fechas de caducidad), sus preferencias dietéticas, y quizás un nivel de dificultad deseado.
+Backend (Lógica AI): El servidor construye un prompt detallado para gemini-pro. Por ejemplo:
+"Genera una receta vegetariana para la cena usando 'zanahoria', 'tomate', 'espinacas' que tengo en mi nevera y están a punto de caducar. La receta debe ser fácil de hacer (menos de 30 minutos). Incluye los pasos, los ingredientes exactos (con cantidades), y el tiempo de cocción. Formato: JSON."
+Backend: Recibe la respuesta de Gemini (preferiblemente en formato JSON para un fácil parseo) y la procesa.
+Frontend: Muestra la receta generada al usuario.
+Asistente de Cocina / Consejos (Gemini-Pro / Chat):
+
+Frontend: Implementa un chatbot (posiblemente con reconocimiento de voz en el navegador).
+Backend (Lógica AI): El servidor mantiene una conversación con Gemini (usando la funcionalidad de chat del SDK). Cada pregunta del usuario se envía a Gemini y la respuesta se devuelve.
+Frontend: Muestra la respuesta en el chat.
+Pasos para Desarrollar la App Web:
+Planificación: Define las funcionalidades clave, el flujo de usuario y la arquitectura.
+Configuración del Entorno:
+Crea una cuenta en Google Cloud y Google AI Studio para obtener tu clave de API de Gemini.
+Configura tu proyecto web (frontend y backend).
+Backend Primero (Integración Gemini): Es crucial probar que la comunicación con la API de Gemini funciona correctamente. Empieza con las funciones de reconocimiento y generación de recetas.
+Desarrollo del Frontend: Crea la interfaz de usuario, conectándola a los endpoints del backend.
+Despliegue (Hosting):
+Frontend: Puedes usar servicios como Netlify, Vercel, o Firebase Hosting para alojar tus archivos estáticos (HTML, CSS, JS).
+Backend: Plataformas como Google Cloud Run, Firebase Functions, Heroku, o un VPS (Virtual Private Server) son adecuadas para alojar tu servidor backend.
+Pruebas e Iteración: Prueba exhaustivamente todas las funcionalidades, especialmente la IA, para asegurarte de que las respuestas son precisas y útiles. Recopila feedback y mejora continuamente.
