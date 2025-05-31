@@ -155,32 +155,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const ingredientList = ingredientNames.join(', ');
 
-      const prompt = `Create a recipe using these ingredients: ${ingredientList}
+      const prompt = `Crea una receta usando estos ingredientes: ${ingredientList}
 
-Preferences:
-- Meal type: ${preferences?.mealType || 'dinner'}
-- Cooking time: ${preferences?.cookingTime || '30 minutes'}
-- Difficulty: ${preferences?.difficulty || 'easy'}
-- Dietary restrictions: ${preferences?.dietaryRestrictions?.join(', ') || 'none'}
+Preferencias:
+- Tipo de comida: ${preferences?.mealType || 'cena'}
+- Tiempo de cocción: ${preferences?.cookingTime || '30 minutos'}
+- Dificultad: ${preferences?.difficulty || 'fácil'}
+- Restricciones dietéticas: ${preferences?.dietaryRestrictions?.join(', ') || 'ninguna'}
 
-Please provide a JSON response with this exact structure:
+Por favor proporciona una respuesta JSON con exactamente esta estructura:
 {
-  "title": "Recipe name",
-  "description": "Brief description",
+  "title": "Nombre de la receta en español",
+  "description": "Descripción breve en español",
   "cookingTime": 30,
   "servings": 2,
-  "difficulty": "easy",
+  "difficulty": "fácil",
   "ingredients": [
-    {"name": "ingredient name", "amount": "quantity needed", "available": true}
+    {"name": "nombre del ingrediente", "amount": "cantidad necesaria", "available": true}
   ],
   "instructions": [
-    {"step": 1, "instruction": "Step description", "time": 5}
+    {"step": 1, "instruction": "Descripción del paso en español", "time": 5}
   ],
-  "dietaryTags": ["vegetarian", "gluten-free"],
-  "tips": "Additional cooking tips"
+  "dietaryTags": ["vegetariano", "sin gluten"],
+  "tips": "Consejos adicionales de cocina en español"
 }
 
-Make sure to prioritize ingredients that are expiring soon. Include basic pantry items if needed but mark them as "available": false in the ingredients list.`;
+IMPORTANTE: 
+- Responde TODO en español
+- Usa nombres de ingredientes comunes en español
+- Las instrucciones deben ser claras y en español
+- Si necesitas ingredientes básicos de despensa que no están en la lista, márcalos como "available": false`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;

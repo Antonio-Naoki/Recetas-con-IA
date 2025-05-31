@@ -43,9 +43,10 @@ export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="text-center">
-                <div className="text-6xl mb-4">🍽️</div>
-                <p className="text-slate-600">Imagen de receta generada</p>
+              <div className="text-center text-white">
+                <div className="text-6xl mb-4">🍳</div>
+                <h3 className="text-xl font-semibold mb-2">{recipe.title}</h3>
+                <p className="text-emerald-100">Receta generada con IA</p>
               </div>
             )}
           </div>
