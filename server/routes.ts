@@ -174,26 +174,41 @@ Por favor proporciona una respuesta JSON con exactamente esta estructura:
   "ingredients": [
     {"name": "Pollo (pechuga)", "amount": "800 gramos", "available": true},
     {"name": "Cebolla blanca", "amount": "2 unidades medianas", "available": true},
-    {"name": "Sal", "amount": "1 cucharadita", "available": false}
+    {"name": "Aceite de oliva", "amount": "3 cucharadas", "available": false},
+    {"name": "Sal", "amount": "1 cucharadita", "available": false},
+    {"name": "Pimienta negra", "amount": "1/2 cucharadita", "available": false}
   ],
   "instructions": [
     {"step": 1, "instruction": "Lavar y secar las pechugas de pollo. Cortarlas en cubos de 3cm aproximadamente. Sazonar con sal y pimienta al gusto.", "time": 8},
-    {"step": 2, "instruction": "Pelar y picar finamente las cebollas en cubos pequeños de 1cm. Calentar 2 cucharadas de aceite en una sartén grande a fuego medio-alto.", "time": 5}
+    {"step": 2, "instruction": "Pelar y picar finamente las cebollas en cubos pequeños de 1cm. Calentar 3 cucharadas de aceite de oliva en una sartén grande a fuego medio-alto.", "time": 5}
   ],
   "dietaryTags": ["sin gluten", "alto en proteínas"],
   "tips": "Para obtener mejor sabor, marina el pollo 30 minutos antes de cocinar. Sirve caliente acompañado de arroz blanco o puré de papas."
 }
 
-INSTRUCCIONES ESPECÍFICAS:
-- Cantidades EXACTAS: Especifica gramos, unidades, cucharadas, tazas, etc.
-- Pasos DETALLADOS: Incluye técnicas de cocción, tiempos específicos, temperaturas
-- Tamaños de corte: Especifica cómo cortar (cubos, juliana, rodajas, etc.)
-- Técnicas culinarias: Menciona sofrito, sellado, cocción a fuego lento, etc.
-- Puntos de cocción: Cuando esté dorado, transparente, al dente, etc.
-- Condimentos básicos: Incluye sal, pimienta, aceite como "available": false
-- Para ${preferences?.servings || 4} personas exactamente
-- Tiempo total realista considerando preparación y cocción
-- Responde TODO en español con vocabulario culinario preciso`;
+INSTRUCCIONES CRÍTICAS - DEBE CUMPLIR:
+1. CANTIDADES OBLIGATORIAS: Cada ingrediente DEBE tener un "amount" con cantidad exacta
+   - Ejemplos: "500 gramos", "2 tazas", "3 cucharadas", "1 unidad grande"
+   - NUNCA dejes "amount" vacío o undefined
+   - Calcula las cantidades específicamente para ${preferences?.servings || 4} personas
+
+2. INGREDIENTES COMPLETOS: Incluye TODOS los ingredientes necesarios
+   - Ingredientes principales del usuario (available: true)
+   - Condimentos básicos: sal, pimienta, aceite (available: false)
+   - Otros ingredientes necesarios para la receta
+
+3. PASOS DETALLADOS: Incluye técnicas específicas
+   - Tamaños de corte exactos (cubos de 2cm, juliana fina, etc.)
+   - Tiempos específicos para cada paso
+   - Temperaturas y puntos de cocción precisos
+
+4. FORMATO JSON ESTRICTO: Responde SOLO con el JSON válido, sin texto adicional
+
+5. TODO EN ESPAÑOL: Nombres, descripciones e instrucciones completamente en español
+
+EJEMPLO DE CANTIDAD CORRECTA:
+{"name": "Arroz", "amount": "400 gramos", "available": true}
+{"name": "Caldo de pollo", "amount": "1.2 litros", "available": false}`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;

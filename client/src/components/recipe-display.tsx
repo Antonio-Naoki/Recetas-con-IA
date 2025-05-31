@@ -167,9 +167,22 @@ ${instructionsText}
               <div className="space-y-3">
                 {ingredients.map((ingredient: any, index: number) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm font-medium">
-                      {typeof ingredient === 'string' ? ingredient : ingredient.name || ingredient.amount || 'Ingrediente'}
-                    </span>
+                    <div className="flex-1">
+                      {typeof ingredient === 'string' ? (
+                        <span className="text-sm font-medium">{ingredient}</span>
+                      ) : (
+                        <div>
+                          <span className="text-sm font-medium text-slate-900">
+                            {ingredient.name || 'Ingrediente'}
+                          </span>
+                          {ingredient.amount && (
+                            <span className="text-sm text-slate-600 ml-2">
+                              - {ingredient.amount}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {typeof ingredient === 'object' && ingredient.available !== undefined ? (
                       ingredient.available ? (
                         <Check className="text-eco-fresh" size={16} />
