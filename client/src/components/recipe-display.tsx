@@ -270,7 +270,7 @@ ${instructionsText}
                         </div>
                       )}
                     </div>
-                    {typeof ingredient === 'object' && ingredient.available !== undefined ? (
+                    {typeof ingredient === 'object' && ingredient.available !== undefined && (
                       <Check className="text-eco-fresh" size={16} />
                     )}
                   </div>
