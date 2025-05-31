@@ -72,20 +72,12 @@ export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
       <Card className="overflow-hidden">
         <div className="relative">
           {/* Recipe Header Image */}
-          <div className="h-64 bg-gradient-to-r from-eco-primary/20 to-eco-accent/20 flex items-center justify-center">
-            {recipe.imageUrl ? (
-              <img 
-                src={recipe.imageUrl} 
-                alt={recipe.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-center text-white">
-                <div className="text-6xl mb-4">🍳</div>
-                <h3 className="text-xl font-semibold mb-2">{recipe.title}</h3>
-                <p className="text-emerald-100">Receta generada con IA</p>
-              </div>
-            )}
+          <div className="h-64 bg-gradient-to-r from-eco-primary/20 to-eco-accent/20 flex items-center justify-center relative overflow-hidden">
+            <img 
+              src="https://imgs.search.brave.com/PimXSQve_O-CnrVt2PwaVUc17vD38BrEEDmmUcGhO1Q/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTMz/NzQ2Nzc1NC9lcy9m/b3RvL2ZvdG8tZGUt/dmlzdGEtc3VwZXJp/b3ItZW4tcHJpbWVy/YS1wZXJzb25hLWRl/LWxhcy1tYW5vcy1k/ZS1sYS1tdWplci1z/b3N0ZW5pZW5kby1s/YS1sb25jaGVyYS1j/b24uanBnP3M9NjEy/eDYxMiZ3PTAmaz0y/MCZjPTAxZUFDZXBQ/UFhjc0FTNEJRTk8x/ZDZiUkZrczEzUDQ4/MDZfZExHZnpKckk9" 
+              alt={recipe.title}
+              className="w-full h-full object-cover"
+            />
           </div>
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
