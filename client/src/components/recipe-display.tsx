@@ -12,18 +12,25 @@ interface RecipeDisplayProps {
   recipeId: number;
 }
 
+const foodKeywords = ['pizza', 'burger', 'pasta', 'salad', 'steak', 'sushi', 'taco', 'sandwich', 'soup', 'dessert', 'cake', 'pie', 'chocolate', 'fruit', 'vegetable', 'chicken', 'fish', 'rice', 'bread', 'egg'];
+
+const getFoodImageUrl = (recipeTitle: string): string => {
+  const keyword = foodKeywords.find(k => recipeTitle.toLowerCase().includes(k)) || 'food';
+  return `https://source.unsplash.com/800x400/?${keyword}&q=80`;
+};
+
 export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
   const { recipes, isLoading, generateRecipe } = useRecipes();
   const { toast } = useToast();
   const [isGeneratingVariation, setIsGeneratingVariation] = useState(false);
-  
+
   const recipe = recipes?.find(r => r.id === recipeId);
 
   const generateVariation = async () => {
     if (!recipe) return;
 
     setIsGeneratingVariation(true);
-    
+
     try {
       // Extract ingredient names from the current recipe
       const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
@@ -50,7 +57,7 @@ export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
       };
 
       const newRecipe = await generateRecipe(preferences);
-      
+
       toast({
         title: "¡Variación generada!",
         description: `Nueva variación creada: "${newRecipe?.title || 'Nueva receta'}"`,
@@ -164,29 +171,32 @@ ${instructionsText}
           {/* Recipe Header Image */}
           <div className="h-64 bg-gradient-to-r from-eco-primary/20 to-eco-accent/20 flex items-center justify-center relative overflow-hidden">
             <img 
-              src={`https://picsum.photos/800/400?random=${Math.abs(recipe.title.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0))}`}
+              src={getFoodImageUrl(recipe.title)}
               alt={recipe.title}
               className="w-full h-full object-cover"
               onError={(e) => {
-                // Multiple fallback options
+                // Multiple fallback food images
                 const target = e.target as HTMLImageElement;
                 const fallbacks = [
-                  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=400&fit=crop',
-                  'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=400&fit=crop',
-                  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=400&fit=crop'
+                  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=400&fit=crop&q=80', // Cooking ingredients
+                  'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=400&fit=crop&q=80', // Food preparation
+                  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=400&fit=crop&q=80', // Meal spread
+                  'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=800&h=400&fit=crop&q=80', // Pizza/Italian
+                  'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&h=400&fit=crop&q=80', // Burger/American
+                  'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=800&h=400&fit=crop&q=80'  // Pasta dish
                 ];
                 const currentSrc = target.src;
-                const currentIndex = fallbacks.findIndex(url => currentSrc.includes(url.split('?')[0]));
+                const currentIndex = fallbacks.findIndex(url => currentSrc.includes(url.split('?')[0].split('/').pop() || ''));
                 if (currentIndex < fallbacks.length - 1) {
                   target.src = fallbacks[currentIndex + 1];
-                } else if (!currentSrc.includes('picsum')) {
-                  // If all unsplash images fail, try picsum
-                  target.src = `https://picsum.photos/800/400?random=${Date.now()}`;
+                } else {
+                  // Final fallback - generic food image
+                  target.src = 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&h=400&fit=crop&q=80';
                 }
               }}
             />
           </div>
-          
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
           <div className="absolute bottom-4 left-4 text-white drop-shadow-lg">
             <h2 className="text-3xl font-bold mb-2 text-white drop-shadow-md">{recipe.title}</h2>
