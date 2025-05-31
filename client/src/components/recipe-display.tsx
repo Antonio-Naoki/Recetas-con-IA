@@ -268,10 +268,16 @@ ${instructionsText}
                       ingredient.available ? (
                         <Check className="text-eco-fresh" size={16} />
                       ) : (
-                        <ShoppingCart className="text-slate-400" size={16} />
+                        <div className="flex items-center space-x-1">
+                          <ShoppingCart className="text-amber-500" size={16} />
+                          <span className="text-xs text-amber-600 font-medium">Comprar</span>
+                        </div>
                       )
                     ) : (
-                      <Check className="text-eco-fresh" size={16} />
+                      <div className="flex items-center space-x-1">
+                        <ShoppingCart className="text-amber-500" size={16} />
+                        <span className="text-xs text-amber-600 font-medium">Comprar</span>
+                      </div>
                     )}
                   </div>
                 ))}
