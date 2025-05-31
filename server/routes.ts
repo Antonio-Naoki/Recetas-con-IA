@@ -155,36 +155,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const ingredientList = ingredientNames.join(', ');
 
-      const prompt = `Crea una receta usando estos ingredientes: ${ingredientList}
+      const prompt = `Crea una receta DETALLADA usando estos ingredientes: ${ingredientList}
 
 Preferencias:
 - Tipo de comida: ${preferences?.mealType || 'cena'}
+- Porciones: ${preferences?.servings || 4} personas
 - Tiempo de cocción: ${preferences?.cookingTime || '30 minutos'}
 - Dificultad: ${preferences?.difficulty || 'fácil'}
 - Restricciones dietéticas: ${preferences?.dietaryRestrictions?.join(', ') || 'ninguna'}
 
 Por favor proporciona una respuesta JSON con exactamente esta estructura:
 {
-  "title": "Nombre de la receta en español",
-  "description": "Descripción breve en español",
-  "cookingTime": 30,
-  "servings": 2,
+  "title": "Nombre completo de la receta en español",
+  "description": "Descripción detallada de la receta, sus sabores y características",
+  "cookingTime": 45,
+  "servings": ${preferences?.servings || 4},
   "difficulty": "fácil",
   "ingredients": [
-    {"name": "nombre del ingrediente", "amount": "cantidad necesaria", "available": true}
+    {"name": "Pollo (pechuga)", "amount": "800 gramos", "available": true},
+    {"name": "Cebolla blanca", "amount": "2 unidades medianas", "available": true},
+    {"name": "Sal", "amount": "1 cucharadita", "available": false}
   ],
   "instructions": [
-    {"step": 1, "instruction": "Descripción del paso en español", "time": 5}
+    {"step": 1, "instruction": "Lavar y secar las pechugas de pollo. Cortarlas en cubos de 3cm aproximadamente. Sazonar con sal y pimienta al gusto.", "time": 8},
+    {"step": 2, "instruction": "Pelar y picar finamente las cebollas en cubos pequeños de 1cm. Calentar 2 cucharadas de aceite en una sartén grande a fuego medio-alto.", "time": 5}
   ],
-  "dietaryTags": ["vegetariano", "sin gluten"],
-  "tips": "Consejos adicionales de cocina en español"
+  "dietaryTags": ["sin gluten", "alto en proteínas"],
+  "tips": "Para obtener mejor sabor, marina el pollo 30 minutos antes de cocinar. Sirve caliente acompañado de arroz blanco o puré de papas."
 }
 
-IMPORTANTE: 
-- Responde TODO en español
-- Usa nombres de ingredientes comunes en español
-- Las instrucciones deben ser claras y en español
-- Si necesitas ingredientes básicos de despensa que no están en la lista, márcalos como "available": false`;
+INSTRUCCIONES ESPECÍFICAS:
+- Cantidades EXACTAS: Especifica gramos, unidades, cucharadas, tazas, etc.
+- Pasos DETALLADOS: Incluye técnicas de cocción, tiempos específicos, temperaturas
+- Tamaños de corte: Especifica cómo cortar (cubos, juliana, rodajas, etc.)
+- Técnicas culinarias: Menciona sofrito, sellado, cocción a fuego lento, etc.
+- Puntos de cocción: Cuando esté dorado, transparente, al dente, etc.
+- Condimentos básicos: Incluye sal, pimienta, aceite como "available": false
+- Para ${preferences?.servings || 4} personas exactamente
+- Tiempo total realista considerando preparación y cocción
+- Responde TODO en español con vocabulario culinario preciso`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;

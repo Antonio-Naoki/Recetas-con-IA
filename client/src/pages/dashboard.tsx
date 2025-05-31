@@ -18,6 +18,7 @@ export default function Dashboard() {
     mealType: 'dinner',
     cookingTime: '30 minutes',
     difficulty: 'easy',
+    servings: 4,
     dietaryRestrictions: [] as string[],
   });
   const [generatedRecipeId, setGeneratedRecipeId] = useState<number | null>(null);
@@ -145,7 +146,7 @@ export default function Dashboard() {
             </div>
 
             {/* Recipe Preferences */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
               <div>
                 <Label className="text-sm font-medium text-slate-700 mb-2 block">Tipo de Comida</Label>
                 <Select 
@@ -160,6 +161,27 @@ export default function Dashboard() {
                     <SelectItem value="lunch">Almuerzo</SelectItem>
                     <SelectItem value="dinner">Cena</SelectItem>
                     <SelectItem value="snack">Snack</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-slate-700 mb-2 block">Porciones</Label>
+                <Select 
+                  value={preferences.servings.toString()} 
+                  onValueChange={(value) => setPreferences(prev => ({ ...prev, servings: parseInt(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 persona</SelectItem>
+                    <SelectItem value="2">2 personas</SelectItem>
+                    <SelectItem value="3">3 personas</SelectItem>
+                    <SelectItem value="4">4 personas</SelectItem>
+                    <SelectItem value="5">5 personas</SelectItem>
+                    <SelectItem value="6">6 personas</SelectItem>
+                    <SelectItem value="8">8 personas</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
