@@ -162,13 +162,25 @@ ${instructionsText}
           {/* Recipe Header Image */}
           <div className="h-64 bg-gradient-to-r from-eco-primary/20 to-eco-accent/20 flex items-center justify-center relative overflow-hidden">
             <img 
-              src={`https://source.unsplash.com/800x400/?food,${encodeURIComponent(recipe.title.toLowerCase().replace(/\s+/g, ','))}`}
+              src={`https://picsum.photos/800/400?random=${Math.abs(recipe.title.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0))}`}
               alt={recipe.title}
               className="w-full h-full object-cover"
               onError={(e) => {
-                // Fallback to a general food image if specific recipe image fails
+                // Multiple fallback options
                 const target = e.target as HTMLImageElement;
-                target.src = `https://source.unsplash.com/800x400/?food,cooking,delicious`;
+                const fallbacks = [
+                  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=400&fit=crop',
+                  'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=400&fit=crop',
+                  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=400&fit=crop'
+                ];
+                const currentSrc = target.src;
+                const currentIndex = fallbacks.findIndex(url => currentSrc.includes(url.split('?')[0]));
+                if (currentIndex < fallbacks.length - 1) {
+                  target.src = fallbacks[currentIndex + 1];
+                } else if (!currentSrc.includes('picsum')) {
+                  // If all unsplash images fail, try picsum
+                  target.src = `https://picsum.photos/800/400?random=${Date.now()}`;
+                }
               }}
             />
           </div>
