@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/ai";
 import { storage } from "./storage";
 import { insertIngredientSchema, insertRecipeSchema, insertRecipePreferencesSchema } from "@shared/schema";
 import { z } from "zod";
@@ -45,11 +45,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validated = insertIngredientSchema.partial().parse(req.body);
       const ingredient = await storage.updateIngredient(id, validated);
-      
+
       if (!ingredient) {
         return res.status(404).json({ error: "Ingredient not found" });
       }
-      
+
       res.json(ingredient);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -64,11 +64,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const deleted = await storage.deleteIngredient(id);
-      
+
       if (!deleted) {
         return res.status(404).json({ error: "Ingredient not found" });
       }
-      
+
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete ingredient" });
@@ -83,11 +83,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
+
       const prompt = `Analyze this image and identify all edible ingredients you can see. 
       Return a JSON array of objects with the following structure:
       [{"name": "ingredient name", "quantity": "estimated quantity", "confidence": "high/medium/low"}]
-      
+
       Only include items that are clearly identifiable food ingredients. 
       Be conservative with quantities and use common kitchen measurements.
       Focus on fresh produce, dairy, proteins, and pantry items.`;
@@ -102,21 +102,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await model.generateContent([prompt, imagePart]);
       const response = await result.response;
       const text = response.text();
-      
+
       try {
         // Extract JSON from the response
         const jsonMatch = text.match(/\[[\s\S]*\]/);
         if (!jsonMatch) {
           throw new Error("No JSON found in response");
         }
-        
+
         const recognizedIngredients = JSON.parse(jsonMatch[0]);
         res.json({ ingredients: recognizedIngredients });
       } catch (parseError) {
         // Fallback: parse manually if JSON parsing fails
         const ingredients = [];
         const lines = text.split('\n').filter(line => line.trim());
-        
+
         for (const line of lines) {
           if (line.includes(':') || line.includes('-')) {
             const cleaned = line.replace(/[-*]/g, '').trim();
@@ -129,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         }
-        
+
         res.json({ ingredients });
       }
     } catch (error) {
@@ -143,128 +143,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Recipe generation route
   app.post("/api/recipes/generate", async (req, res) => {
-    try {
-      const { preferences } = req.body;
-      const ingredientNames = preferences?.ingredientNames || [];
-      
-      if (!ingredientNames || !Array.isArray(ingredientNames) || ingredientNames.length === 0) {
-        return res.status(400).json({ error: "No ingredients provided" });
-      }
+  try {
+    const { preferences } = req.body;
+    console.log('Received preferences:', preferences);
 
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
-      const ingredientList = ingredientNames.join(', ');
+    // Handle different input formats
+    let ingredientNames: string[] = [];
 
-      const isVariation = preferences?.isVariation;
-      const originalTitle = preferences?.originalTitle;
-      
-      const prompt = `${isVariation ? 
-        `Crea una VARIACIÓN CREATIVA de la receta "${originalTitle}" usando los mismos ingredientes base: ${ingredientList}. 
-        
-        IMPORTANTE: Debe ser una receta DIFERENTE pero usando ingredientes similares. Cambia:
-        - Método de cocción (al horno, a la plancha, guisado, etc.)
-        - Especias y condimentos
-        - Cortes y preparación de ingredientes
-        - Presentación final
-        - Nombre de la receta (debe ser completamente diferente)` 
-        : 
-        `Crea una receta DETALLADA usando estos ingredientes: ${ingredientList}`}
+    if (preferences.ingredientNames && Array.isArray(preferences.ingredientNames)) {
+      ingredientNames = preferences.ingredientNames;
+    } else if (preferences.ingredientIds && Array.isArray(preferences.ingredientIds)) {
+      // If we have ingredient IDs, we would normally fetch them from database
+      // For now, we'll use some default ingredients
+      ingredientNames = ['tomate', 'cebolla', 'ajo'];
+    }
 
-Preferencias:
-- Tipo de comida: ${preferences?.mealType || 'cena'}
-- Porciones: ${preferences?.servings || 4} personas
-- Tiempo de cocción: ${preferences?.cookingTime || '30 minutos'}
-- Dificultad: ${preferences?.difficulty || 'fácil'}
-- Restricciones dietéticas: ${preferences?.dietaryRestrictions?.join(', ') || 'ninguna'}
+    // Create specialized prompt for variations
+    let prompt;
+    if (preferences.isVariation && preferences.originalRecipe) {
+      prompt = `Genera una variación creativa de una receta existente en español:
 
-Por favor proporciona una respuesta JSON con exactamente esta estructura:
+RECETA ORIGINAL: "${preferences.originalRecipe.title}"
+INGREDIENTES ORIGINALES: ${preferences.originalRecipe.ingredients?.join(', ') || ingredientNames.join(', ')}
+
+INSTRUCCIONES PARA LA VARIACIÓN:
+${preferences.specialInstructions || 'Crea una variación interesante cambiando la técnica de cocción, especias, o presentación'}
+
+PARÁMETROS:
+- Tipo de comida: ${preferences.mealType || 'cena'}
+- Tiempo de cocción: ${preferences.cookingTime || '30 minutos'}
+- Dificultad: ${preferences.difficulty || 'fácil'}
+- Porciones: ${preferences.servings || 4}
+- Restricciones dietéticas: ${preferences.dietaryRestrictions?.join(', ') || 'ninguna'}
+
+IMPORTANTE: 
+- Crea una receta DIFERENTE pero inspirada en la original
+- Cambia al menos 2-3 ingredientes o la técnica de cocción
+- Mantén el espíritu del plato pero hazlo único
+- Debe ser una receta completamente nueva, no una copia
+
+Responde únicamente con un JSON válido con esta estructura exacta:
 {
-  "title": "Nombre completo de la receta en español",
-  "description": "Descripción detallada de la receta, sus sabores y características",
-  "cookingTime": 45,
-  "servings": ${preferences?.servings || 4},
+  "title": "Nombre de la receta variada (debe ser diferente al original)",
+  "description": "Descripción que mencione que es una variación creativa",
+  "cookingTime": 30,
+  "servings": 4,
   "difficulty": "fácil",
   "ingredients": [
-    {"name": "Pollo (pechuga)", "amount": "800 gramos", "available": true},
-    {"name": "Cebolla blanca", "amount": "2 unidades medianas", "available": true},
-    {"name": "Aceite de oliva", "amount": "3 cucharadas", "available": false},
-    {"name": "Sal", "amount": "1 cucharadita", "available": false},
-    {"name": "Pimienta negra", "amount": "1/2 cucharadita", "available": false}
+    {"name": "Ingrediente 1", "amount": "cantidad"},
+    {"name": "Ingrediente 2", "amount": "cantidad"}
   ],
   "instructions": [
-    {"step": 1, "instruction": "Lavar y secar las pechugas de pollo. Cortarlas en cubos de 3cm aproximadamente. Sazonar con sal y pimienta al gusto.", "time": 8},
-    {"step": 2, "instruction": "Pelar y picar finamente las cebollas en cubos pequeños de 1cm. Calentar 3 cucharadas de aceite de oliva en una sartén grande a fuego medio-alto.", "time": 5}
+    {"step": 1, "instruction": "Primera instrucción", "time": 5},
+    {"step": 2, "instruction": "Segunda instrucción", "time": 10}
   ],
-  "dietaryTags": ["sin gluten", "alto en proteínas"],
-  "tips": "Para obtener mejor sabor, marina el pollo 30 minutos antes de cocinar. Sirve caliente acompañado de arroz blanco o puré de papas."
+  "dietaryTags": ["variación", "tag2"]
+}`;
+    } else {
+      prompt = `Genera una receta en español con los siguientes parámetros:
+- Ingredientes disponibles: ${ingredientNames.join(', ')}
+- Tipo de comida: ${preferences.mealType || 'cena'}
+- Tiempo de cocción: ${preferences.cookingTime || '30 minutos'}
+- Dificultad: ${preferences.difficulty || 'fácil'}
+- Porciones: ${preferences.servings || 4}
+- Restricciones dietéticas: ${preferences.dietaryRestrictions?.join(', ') || 'ninguna'}
+
+Responde únicamente con un JSON válido con esta estructura exacta:
+{
+  "title": "Nombre de la receta",
+  "description": "Descripción breve y apetitosa",
+  "cookingTime": 30,
+  "servings": 4,
+  "difficulty": "fácil",
+  "ingredients": [
+    {"name": "Ingrediente 1", "amount": "cantidad"},
+    {"name": "Ingrediente 2", "amount": "cantidad"}
+  ],
+  "instructions": [
+    {"step": 1, "instruction": "Primera instrucción", "time": 5},
+    {"step": 2, "instruction": "Segunda instrucción", "time": 10}
+  ],
+  "dietaryTags": ["tag1", "tag2"]
 }
 
-INSTRUCCIONES CRÍTICAS - DEBE CUMPLIR:
-1. CANTIDADES OBLIGATORIAS: Cada ingrediente DEBE tener un "amount" con cantidad exacta
-   - Ejemplos: "500 gramos", "2 tazas", "3 cucharadas", "1 unidad grande"
-   - NUNCA dejes "amount" vacío o undefined
-   - Calcula las cantidades específicamente para ${preferences?.servings || 4} personas
-
-2. INGREDIENTES COMPLETOS: Incluye TODOS los ingredientes necesarios
-   - Ingredientes principales del usuario (available: true)
-   - Condimentos básicos: sal, pimienta, aceite (available: false)
-   - Otros ingredientes necesarios para la receta
-
-3. PASOS DETALLADOS: Incluye técnicas específicas
-   - Tamaños de corte exactos (cubos de 2cm, juliana fina, etc.)
-   - Tiempos específicos para cada paso
-   - Temperaturas y puntos de cocción precisos
-
-4. FORMATO JSON ESTRICTO: Responde SOLO con el JSON válido, sin texto adicional
-
-5. TODO EN ESPAÑOL: Nombres, descripciones e instrucciones completamente en español
-
-EJEMPLO DE CANTIDAD CORRECTA:
-{"name": "Arroz", "amount": "400 gramos", "available": true}
-{"name": "Caldo de pollo", "amount": "1.2 litros", "available": false}`;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      try {
-        // Extract JSON from the response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          throw new Error("No JSON found in response");
-        }
-        
-        const recipeData = JSON.parse(jsonMatch[0]);
-        
-        // Save the recipe
-        const recipe = await storage.createRecipe({
-          title: recipeData.title,
-          description: recipeData.description,
-          cookingTime: recipeData.cookingTime,
-          servings: recipeData.servings,
-          difficulty: recipeData.difficulty,
-          ingredients: recipeData.ingredients,
-          instructions: recipeData.instructions,
-          dietaryTags: recipeData.dietaryTags,
-          imageUrl: null,
-        });
-        
-        res.json(recipe);
-      } catch (parseError) {
-        console.error("JSON parsing error:", parseError);
-        res.status(500).json({ 
-          error: "Failed to parse recipe response",
-          details: text.substring(0, 200) + "..."
-        });
-      }
-    } catch (error) {
-      console.error("Recipe generation error:", error);
-      res.status(500).json({ 
-        error: "Failed to generate recipe",
-        details: error.message 
-      });
+Usa ingredientes comunes de cocina española y latinoamericana. Asegúrate de que sea una receta práctica y deliciosa.`;
     }
-  });
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text();
+
+    // Clean the response
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    console.log('Raw AI response:', text);
+
+    let recipeData;
+    try {
+      recipeData = JSON.parse(text);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      throw new Error('Invalid JSON response from AI');
+    }
+
+    // Validate and clean the recipe data
+    const cleanedRecipe = {
+      title: recipeData.title || 'Receta sin nombre',
+      description: recipeData.description || 'Deliciosa receta casera',
+      cookingTime: typeof recipeData.cookingTime === 'number' ? recipeData.cookingTime : 30,
+      servings: typeof recipeData.servings === 'number' ? recipeData.servings : 4,
+      difficulty: recipeData.difficulty || 'fácil',
+      ingredients: Array.isArray(recipeData.ingredients) ? recipeData.ingredients : [],
+      instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
+      dietaryTags: Array.isArray(recipeData.dietaryTags) ? recipeData.dietaryTags : []
+    };
+
+    // Store the recipe
+    const newRecipe = await storage.createRecipe({
+      title: cleanedRecipe.title,
+      description: cleanedRecipe.description,
+      cookingTime: cleanedRecipe.cookingTime,
+      servings: cleanedRecipe.servings,
+      difficulty: cleanedRecipe.difficulty,
+      ingredients: cleanedRecipe.ingredients,
+      instructions: cleanedRecipe.instructions,
+      dietaryTags: cleanedRecipe.dietaryTags,
+      imageUrl: null,
+    });
+
+    console.log('Generated recipe:', cleanedRecipe);
+    res.json(newRecipe);
+  } catch (error) {
+    console.error("Error generating recipe:", error);
+    res.status(500).json({ 
+      error: "Failed to generate recipe",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
 
   // Recipes routes
   app.get("/api/recipes", async (req, res) => {
@@ -280,11 +296,11 @@ EJEMPLO DE CANTIDAD CORRECTA:
     try {
       const id = parseInt(req.params.id);
       const recipe = await storage.getRecipe(id);
-      
+
       if (!recipe) {
         return res.status(404).json({ error: "Recipe not found" });
       }
-      
+
       res.json(recipe);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch recipe" });

@@ -31,34 +31,36 @@ export default function RecipeDisplay({ recipeId }: RecipeDisplayProps) {
         typeof ing === 'string' ? ing : ing.name || 'Ingrediente'
       );
 
-      // Create preferences based on current recipe but with variation request
+      // Create a more specific variation request
       const preferences = {
         ingredientNames,
         mealType: 'dinner',
-        cookingTime: recipe.cookingTime ? `${recipe.cookingTime} minutes` : '30 minutes',
+        cookingTime: '30 minutes',
         difficulty: recipe.difficulty || 'easy',
         servings: recipe.servings || 4,
         dietaryRestrictions: [],
+        // Add specific variation instructions
+        specialInstructions: `Genera una variación de la receta "${recipe.title}". Usa ingredientes similares pero cambia la técnica de cocción, las especias, o la presentación. Mantén el mismo tipo de plato pero hazlo diferente y creativo.`,
         isVariation: true,
-        originalTitle: recipe.title
+        originalRecipe: {
+          title: recipe.title,
+          ingredients: ingredientNames,
+          cookingMethod: recipe.instructions?.[0] || ''
+        }
       };
 
-      await generateRecipe(preferences);
+      const newRecipe = await generateRecipe(preferences);
       
       toast({
         title: "¡Variación generada!",
-        description: "Se ha creado una nueva variación de tu receta.",
+        description: `Nueva variación creada: "${newRecipe?.title || 'Nueva receta'}"`,
       });
 
-      // Scroll to the new recipe (it will be added to the list)
-      setTimeout(() => {
-        const element = document.getElementById('generated-recipe');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 500);
+      // Scroll to top to see the new recipe
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error) {
+      console.error('Error generating variation:', error);
       toast({
         title: "Error al generar variación",
         description: "No se pudo generar la variación. Inténtalo de nuevo.",
