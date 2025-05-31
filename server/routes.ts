@@ -147,6 +147,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { preferences } = req.body;
     console.log('Received preferences:', preferences);
 
+    // Initialize the model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
     // Handle different input formats
     let ingredientNames: string[] = [];
 
