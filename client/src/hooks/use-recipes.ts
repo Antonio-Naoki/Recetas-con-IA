@@ -76,6 +76,45 @@ export function useRecipes() {
     },
   });
 
+  const generateRecipe = async (preferences: RecipePreferences): Promise<Recipe> => {
+    const response = await fetch('/api/recipes/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(preferences),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate recipe');
+    }
+
+    const recipe = await response.json();
+
+    // Mark ingredients that were provided by the user
+    if (recipe.ingredients && Array.isArray(recipe.ingredients) && preferences.ingredientNames) {
+      recipe.ingredients = recipe.ingredients.map((ingredient: any) => {
+        if (typeof ingredient === 'object' && ingredient.name) {
+          const isUserIngredient = preferences.ingredientNames.some((userIngredient: string) => 
+            ingredient.name.toLowerCase().includes(userIngredient.toLowerCase()) ||
+            userIngredient.toLowerCase().includes(ingredient.name.toLowerCase())
+          );
+          return {
+            ...ingredient,
+            userAdded: isUserIngredient,
+            available: isUserIngredient
+          };
+        }
+        return ingredient;
+      });
+    }
+
+    // Refresh the recipes list to include the new recipe
+    queryClient.invalidateQueries({ queryKey: ['recipes'] });
+
+    return recipe;
+  };
+
   return {
     recipes,
     isLoading,
