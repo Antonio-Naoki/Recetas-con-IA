@@ -152,6 +152,9 @@ export default function Dashboard() {
       // Construct advanced recipe preferences
       let enhancedInstructions = specialInstructions;
 
+      // Build enhanced instructions properly
+      let contextualInstructions = "";
+
       // Add AI personality context
       const personalityContext = {
         creative: "Sé extremadamente creativo y propón combinaciones innovadoras de sabores.",
@@ -161,31 +164,33 @@ export default function Dashboard() {
         quick: "Optimiza para velocidad y simplicidad sin sacrificar el sabor."
       };
 
-      enhancedInstructions += ` PERSONALIDAD DE IA: ${personalityContext[aiPersonality as keyof typeof personalityContext]}`;
+      if (aiPersonality && personalityContext[aiPersonality as keyof typeof personalityContext]) {
+        contextualInstructions += ` PERSONALIDAD DE IA: ${personalityContext[aiPersonality as keyof typeof personalityContext]}`;
+      }
 
       // Add nutritional optimization
       if (nutritionOptimization) {
-        enhancedInstructions += ` OPTIMIZACIÓN NUTRICIONAL: Crea una receta que tenga aproximadamente ${nutritionalGoals.calories} calorías, ${nutritionalGoals.protein}g de proteína, ${nutritionalGoals.carbs}g de carbohidratos, ${nutritionalGoals.fat}g de grasa, y ${nutritionalGoals.fiber}g de fibra por porción.`;
+        contextualInstructions += ` OPTIMIZACIÓN NUTRICIONAL: Crea una receta que tenga aproximadamente ${nutritionalGoals.calories} calorías, ${nutritionalGoals.protein}g de proteína, ${nutritionalGoals.carbs}g de carbohidratos, ${nutritionalGoals.fat}g de grasa, y ${nutritionalGoals.fiber}g de fibra por porción.`;
       }
 
       // Add sustainability context
       if (sustainabilityMode) {
-        enhancedInstructions += " SOSTENIBILIDAD: Prioriza ingredientes locales, de temporada, y técnicas de cocción que minimicen el desperdicio de alimentos y el consumo energético.";
+        contextualInstructions += " SOSTENIBILIDAD: Prioriza ingredientes locales, de temporada, y técnicas de cocción que minimicen el desperdicio de alimentos y el consumo energético.";
       }
 
       // Add cuisine preferences
       if (culinaryPreferences.cuisineTypes.length > 0) {
-        enhancedInstructions += ` ESTILO CULINARIO: Inspírate en las cocinas: ${culinaryPreferences.cuisineTypes.join(', ')}.`;
+        contextualInstructions += ` ESTILO CULINARIO: Inspírate en las cocinas: ${culinaryPreferences.cuisineTypes.join(', ')}.`;
       }
 
       // Add cooking methods
       if (culinaryPreferences.cookingMethods.length > 0) {
-        enhancedInstructions += ` MÉTODOS DE COCCIÓN PREFERIDOS: ${culinaryPreferences.cookingMethods.join(', ')}.`;
+        contextualInstructions += ` MÉTODOS DE COCCIÓN PREFERIDOS: ${culinaryPreferences.cookingMethods.join(', ')}.`;
       }
 
       // Add spice level
       const spiceLevels = ['muy suave', 'suave', 'medio', 'picante', 'muy picante'];
-      enhancedInstructions += ` NIVEL DE PICANTE: ${spiceLevels[culinaryPreferences.spiceLevel - 1]}.`;
+      contextualInstructions += ` NIVEL DE PICANTE: ${spiceLevels[culinaryPreferences.spiceLevel - 1]}.`;
 
       // Add health focus
       const healthFocusMap = {
@@ -195,7 +200,12 @@ export default function Dashboard() {
         energy_boost: "Incluye ingredientes que proporcionen energía sostenida.",
         balanced: "Mantén un equilibrio nutricional completo."
       };
-      enhancedInstructions += ` ENFOQUE DE SALUD: ${healthFocusMap[preferences.healthFocus as keyof typeof healthFocusMap]}`;
+      contextualInstructions += ` ENFOQUE DE SALUD: ${healthFocusMap[preferences.healthFocus as keyof typeof healthFocusMap]}`;
+
+      // Combine user instructions with contextual instructions
+      const finalInstructions = specialInstructions.trim() 
+        ? `${specialInstructions.trim()}${contextualInstructions}` 
+        : contextualInstructions;
 
       const recipePreferences = {
         ingredientNames: ingredients,
@@ -204,7 +214,7 @@ export default function Dashboard() {
         difficulty: preferences.difficulty,
         servings: preferences.servings,
         dietaryRestrictions: preferences.dietaryRestrictions,
-        specialInstructions: enhancedInstructions,
+        specialInstructions: finalInstructions,
         nutritionalGoals: nutritionOptimization ? nutritionalGoals : undefined,
         sustainabilityMode,
         aiPersonality,
