@@ -56,9 +56,33 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Using port 5000 for Replit deployment compatibility
-  const port = 5000;
-  server.listen(port, () => {
-    log(`serving on port ${port}`);
+  // Try to use port 5000 first (for Replit deployment compatibility)
+  // If port 5000 is in use, try alternative ports
+  const tryPort = (port: number): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const serverInstance = server.listen(port)
+        .on('listening', () => {
+          log(`serving on port ${port}`);
+          resolve();
+        })
+        .on('error', (err: any) => {
+          if (err.code === 'EADDRINUSE') {
+            log(`Port ${port} is already in use, trying next port...`);
+            serverInstance.close();
+            // Try next port
+            tryPort(port + 1)
+              .then(resolve)
+              .catch(reject);
+          } else {
+            reject(err);
+          }
+        });
+    });
+  };
+
+  // Start with port 5000
+  tryPort(5000).catch(err => {
+    log(`Failed to start server: ${err.message}`);
+    process.exit(1);
   });
 })();
