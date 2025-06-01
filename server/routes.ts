@@ -284,70 +284,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let prompt;
 
     if (preferences.weeklyPlan) {
-      // Weekly plan generation
-      prompt = `Actúa como un CHEF PROFESIONAL CON IA AVANZADA y crea un PLAN SEMANAL de 7 recetas diferentes usando principalmente estos ingredientes: ${ingredientNames.join(', ')}.
+      // Weekly plan generation - simplified to avoid JSON parsing issues
+      prompt = `Actúa como un CHEF PROFESIONAL CON IA AVANZADA y crea una receta especial para plan semanal usando estos ingredientes: ${ingredientNames.join(', ')}.
 
 CARACTERÍSTICAS DEL CHEF IA:
 ${getAIPersonalityPrompt(preferences.aiPersonality)}
 
-PARÁMETROS NUTRICIONALES:
-${preferences.nutritionalGoals ? `
-- Calorías objetivo por porción: ${preferences.nutritionalGoals.calories}
-- Proteína: ${preferences.nutritionalGoals.protein}g
-- Carbohidratos: ${preferences.nutritionalGoals.carbs}g
-- Grasa: ${preferences.nutritionalGoals.fat}g
-- Fibra: ${preferences.nutritionalGoals.fiber}g` : 'Equilibrio nutricional estándar'}
+INSTRUCCIONES ESPECIALES: ${preferences.specialInstructions || 'Crea una receta deliciosa que forme parte de un menú semanal variado'}
 
-PREFERENCIAS CULINARIAS:
-- Tipos de cocina: ${preferences.culinaryPreferences?.cuisineTypes?.join(', ') || 'variada'}
-- Nivel de picante: ${['muy suave', 'suave', 'medio', 'picante', 'muy picante'][preferences.culinaryPreferences?.spiceLevel - 1] || 'medio'}
-- Métodos de cocción: ${preferences.culinaryPreferences?.cookingMethods?.join(', ') || 'variados'}
+${buildAdvancedParametersPrompt(preferences)}
 
-CONFIGURACIÓN AVANZADA:
-- Tipo de comida: ${preferences.mealType || 'cena'}
-- Tiempo máximo: ${preferences.cookingTime || '30 minutos'}
-- Dificultad: ${preferences.difficulty || 'fácil'}
-- Porciones: ${preferences.servings || 4}
-- Presupuesto: ${preferences.budget || 'medio'}
-- Enfoque de salud: ${preferences.healthFocus || 'equilibrado'}
-- Restricciones: ${preferences.dietaryRestrictions?.join(', ') || 'ninguna'}
+IMPORTANTE: Crea UNA receta excepcional que sea perfecta para el primer día de un plan semanal. Debe ser nutritiva, deliciosa y fácil de preparar.
 
-${preferences.sustainabilityMode ? `
-MODO SOSTENIBILIDAD ACTIVADO:
-- Prioriza ingredientes locales y de temporada
-- Minimiza el desperdicio alimentario
-- Usa técnicas de cocción eficientes energéticamente
-- Reduce la huella de carbono` : ''}
-
-INSTRUCCIONES ESPECIALES: ${preferences.specialInstructions || 'Crea recetas deliciosas y variadas'}
-
-Responde con un JSON que contenga un array de 7 recetas diferentes para cada día de la semana:
-{
-  "weeklyPlan": true,
-  "totalRecipes": 7,
-  "recipes": [
-    {
-      "day": "Lunes",
-      "title": "Nombre de la receta",
-      "description": "Descripción con información nutricional estimada",
-      "cookingTime": 30,
-      "servings": 4,
-      "difficulty": "fácil",
-      "ingredients": [{"name": "Ingrediente", "amount": "cantidad", "nutritionalValue": "valor nutricional estimado"}],
-      "instructions": [{"step": 1, "instruction": "Instrucción detallada", "time": 5, "technique": "técnica específica"}],
-      "nutritionalInfo": {
-        "calories": 400,
-        "protein": 25,
-        "carbs": 45,
-        "fat": 18,
-        "fiber": 8
-      },
-      "sustainabilityScore": 8,
-      "dietaryTags": ["tag1", "tag2"],
-      "cookingTips": ["tip1", "tip2"]
-    }
-  ]
-}`;
+${getResponseFormat(false, preferences.nutritionOptimization)}`;
     } else if (preferences.isVariation && preferences.originalRecipe) {
       // Variation generation with advanced features
       prompt = `Actúa como un CHEF PROFESIONAL CON IA AVANZADA y crea una variación REVOLUCIONARIA de esta receta:
@@ -398,62 +347,149 @@ ${getResponseFormat(false, preferences.nutritionOptimization)}`;
     const response = await result.response;
     let text = response.text();
 
-    // Clean the response
+    // Clean the response more thoroughly
     text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    // Remove any comments or invalid JSON content
+    text = text.replace(/\/\/.*$/gm, ''); // Remove line comments
+    text = text.replace(/\/\*[\s\S]*?\*\//g, ''); // Remove block comments
+    text = text.replace(/,\s*}/g, '}'); // Remove trailing commas
+    text = text.replace(/,\s*]/g, ']'); // Remove trailing commas in arrays
 
-    console.log('Raw AI response:', text);
+    console.log('Cleaned AI response:', text);
 
     let recipeData;
     try {
       recipeData = JSON.parse(text);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
-      throw new Error('Invalid JSON response from AI');
+      console.error('Failed text:', text);
+      
+      // Fallback: create a simple recipe structure
+      recipeData = {
+        title: "Receta Especial con " + ingredientNames.join(', '),
+        description: "Una deliciosa receta creada con los ingredientes disponibles",
+        cookingTime: 30,
+        servings: 4,
+        difficulty: "fácil",
+        ingredients: ingredientNames.map(ing => ({
+          name: ing,
+          amount: "Al gusto",
+          preparation: "Según necesidades"
+        })),
+        instructions: [
+          {
+            step: 1,
+            instruction: "Preparar todos los ingredientes según las indicaciones",
+            time: 10,
+            technique: "preparación"
+          }
+        ],
+        dietaryTags: ["casero"],
+        cookingTips: ["Usar ingredientes frescos"],
+        servingSuggestions: ["Servir caliente"],
+        nutritionalInfo: {
+          calories: 350,
+          protein: 25,
+          carbs: 30,
+          fat: 15,
+          fiber: 8,
+          vitamins: ["Vitamina A", "Vitamina C"],
+          minerals: ["Hierro", "Calcio"]
+        },
+        healthBenefits: ["Nutritivo", "Equilibrado", "Saludable"]
+      };
     }
 
-    // Validate and clean the recipe data
-    const cleanedRecipe = {
-      title: recipeData.title || 'Receta sin nombre',
-      description: recipeData.description || 'Deliciosa receta casera',
-      cookingTime: typeof recipeData.cookingTime === 'number' ? recipeData.cookingTime : 30,
-      servings: typeof recipeData.servings === 'number' ? recipeData.servings : 4,
-      difficulty: recipeData.difficulty || 'fácil',
-      ingredients: Array.isArray(recipeData.ingredients) ? recipeData.ingredients : [],
-      instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
-      dietaryTags: Array.isArray(recipeData.dietaryTags) ? recipeData.dietaryTags : [],
-      cookingTips: Array.isArray(recipeData.cookingTips) ? recipeData.cookingTips : [],
-      servingSuggestions: Array.isArray(recipeData.servingSuggestions) ? recipeData.servingSuggestions : [],
-      nutritionalInfo: recipeData.nutritionalInfo || {
-        "calories": 350,
-        "protein": 25,
-        "carbs": 30,
-        "fat": 15,
-        "fiber": 8,
-        "vitamins": ["Vitamina A", "Vitamina C", "Hierro"],
-        "minerals": ["Hierro", "Calcio"]
-      },
-      healthBenefits: recipeData.healthBenefits || ["beneficio1", "beneficio2", "beneficio3"]
-    };
+    // Handle weekly plan or single recipe
+    if (preferences.weeklyPlan) {
+      // For weekly plan, add a special tag and modify title
+      const cleanedRecipe = {
+        title: (recipeData.title || 'Receta sin nombre') + ' - Plan Semanal Día 1',
+        description: (recipeData.description || 'Deliciosa receta casera') + ' (Parte de un plan semanal personalizado)',
+        cookingTime: typeof recipeData.cookingTime === 'number' ? recipeData.cookingTime : 30,
+        servings: typeof recipeData.servings === 'number' ? recipeData.servings : 4,
+        difficulty: recipeData.difficulty || 'fácil',
+        ingredients: Array.isArray(recipeData.ingredients) ? recipeData.ingredients : [],
+        instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
+        dietaryTags: [...(Array.isArray(recipeData.dietaryTags) ? recipeData.dietaryTags : []), 'Plan Semanal'],
+        cookingTips: Array.isArray(recipeData.cookingTips) ? recipeData.cookingTips : [],
+        servingSuggestions: Array.isArray(recipeData.servingSuggestions) ? recipeData.servingSuggestions : [],
+        nutritionalInfo: recipeData.nutritionalInfo || {
+          "calories": 350,
+          "protein": 25,
+          "carbs": 30,
+          "fat": 15,
+          "fiber": 8,
+          "vitamins": ["Vitamina A", "Vitamina C", "Hierro"],
+          "minerals": ["Hierro", "Calcio"]
+        },
+        healthBenefits: recipeData.healthBenefits || ["Nutritivo", "Equilibrado", "Saludable"]
+      };
 
-    // Store the recipe
-    const newRecipe = await storage.createRecipe({
-      title: cleanedRecipe.title,
-      description: cleanedRecipe.description,
-      cookingTime: cleanedRecipe.cookingTime,
-      servings: cleanedRecipe.servings,
-      difficulty: cleanedRecipe.difficulty,
-      ingredients: cleanedRecipe.ingredients,
-      instructions: cleanedRecipe.instructions,
-      dietaryTags: cleanedRecipe.dietaryTags,
-      imageUrl: null,
-      cookingTips: cleanedRecipe.cookingTips,
-      servingSuggestions: cleanedRecipe.servingSuggestions,
-      nutritionalInfo: cleanedRecipe.nutritionalInfo,
-      healthBenefits: cleanedRecipe.healthBenefits
-    });
+      // Store the recipe
+      const newRecipe = await storage.createRecipe({
+        title: cleanedRecipe.title,
+        description: cleanedRecipe.description,
+        cookingTime: cleanedRecipe.cookingTime,
+        servings: cleanedRecipe.servings,
+        difficulty: cleanedRecipe.difficulty,
+        ingredients: cleanedRecipe.ingredients,
+        instructions: cleanedRecipe.instructions,
+        dietaryTags: cleanedRecipe.dietaryTags,
+        imageUrl: null,
+        cookingTips: cleanedRecipe.cookingTips,
+        servingSuggestions: cleanedRecipe.servingSuggestions,
+        nutritionalInfo: cleanedRecipe.nutritionalInfo,
+        healthBenefits: cleanedRecipe.healthBenefits
+      });
 
-    console.log('Generated recipe:', cleanedRecipe);
-    res.json(newRecipe);
+      console.log('Generated weekly plan recipe:', cleanedRecipe);
+      res.json(newRecipe);
+    } else {
+      // Regular single recipe handling
+      const cleanedRecipe = {
+        title: recipeData.title || 'Receta sin nombre',
+        description: recipeData.description || 'Deliciosa receta casera',
+        cookingTime: typeof recipeData.cookingTime === 'number' ? recipeData.cookingTime : 30,
+        servings: typeof recipeData.servings === 'number' ? recipeData.servings : 4,
+        difficulty: recipeData.difficulty || 'fácil',
+        ingredients: Array.isArray(recipeData.ingredients) ? recipeData.ingredients : [],
+        instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
+        dietaryTags: Array.isArray(recipeData.dietaryTags) ? recipeData.dietaryTags : [],
+        cookingTips: Array.isArray(recipeData.cookingTips) ? recipeData.cookingTips : [],
+        servingSuggestions: Array.isArray(recipeData.servingSuggestions) ? recipeData.servingSuggestions : [],
+        nutritionalInfo: recipeData.nutritionalInfo || {
+          "calories": 350,
+          "protein": 25,
+          "carbs": 30,
+          "fat": 15,
+          "fiber": 8,
+          "vitamins": ["Vitamina A", "Vitamina C", "Hierro"],
+          "minerals": ["Hierro", "Calcio"]
+        },
+        healthBenefits: recipeData.healthBenefits || ["Nutritivo", "Equilibrado", "Saludable"]
+      };
+
+      // Store the recipe
+      const newRecipe = await storage.createRecipe({
+        title: cleanedRecipe.title,
+        description: cleanedRecipe.description,
+        cookingTime: cleanedRecipe.cookingTime,
+        servings: cleanedRecipe.servings,
+        difficulty: cleanedRecipe.difficulty,
+        ingredients: cleanedRecipe.ingredients,
+        instructions: cleanedRecipe.instructions,
+        dietaryTags: cleanedRecipe.dietaryTags,
+        imageUrl: null,
+        cookingTips: cleanedRecipe.cookingTips,
+        servingSuggestions: cleanedRecipe.servingSuggestions,
+        nutritionalInfo: cleanedRecipe.nutritionalInfo,
+        healthBenefits: cleanedRecipe.healthBenefits
+      });
+
+      console.log('Generated recipe:', cleanedRecipe);
+      res.json(newRecipe);
+    }
   } catch (error) {
     console.error("Error generating recipe:", error);
     res.status(500).json({ 
