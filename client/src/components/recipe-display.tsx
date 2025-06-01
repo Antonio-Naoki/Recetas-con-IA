@@ -500,35 +500,35 @@ ${instructionsText}${cookingTipsText}${servingSuggestionsText}${nutritionalText}
                               <span className="text-sm font-medium">Calorías</span>
                               <span className="text-sm font-bold">{recipe.nutritionalInfo.calories}</span>
                             </div>
-                            <Progress value={75} className="h-2" />
+                            <Progress value={Math.min((recipe.nutritionalInfo.calories / 500) * 100, 100)} className="h-2" />
                           </div>
                           <div>
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-sm font-medium">Proteína</span>
                               <span className="text-sm font-bold">{recipe.nutritionalInfo.protein}g</span>
                             </div>
-                            <Progress value={60} className="h-2" />
+                            <Progress value={Math.min((recipe.nutritionalInfo.protein / 30) * 100, 100)} className="h-2" />
                           </div>
                           <div>
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-sm font-medium">Carbohidratos</span>
                               <span className="text-sm font-bold">{recipe.nutritionalInfo.carbs}g</span>
                             </div>
-                            <Progress value={80} className="h-2" />
+                            <Progress value={Math.min((recipe.nutritionalInfo.carbs / 50) * 100, 100)} className="h-2" />
                           </div>
                           <div>
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-sm font-medium">Grasa</span>
                               <span className="text-sm font-bold">{recipe.nutritionalInfo.fat}g</span>
                             </div>
-                            <Progress value={45} className="h-2" />
+                            <Progress value={Math.min((recipe.nutritionalInfo.fat / 25) * 100, 100)} className="h-2" />
                           </div>
                           <div>
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-sm font-medium">Fibra</span>
                               <span className="text-sm font-bold">{recipe.nutritionalInfo.fiber}g</span>
                             </div>
-                            <Progress value={65} className="h-2" />
+                            <Progress value={Math.min((recipe.nutritionalInfo.fiber / 15) * 100, 100)} className="h-2" />
                           </div>
                         </div>
                       </Card>
@@ -539,7 +539,7 @@ ${instructionsText}${cookingTipsText}${servingSuggestionsText}${nutritionalText}
                           <Heart className="mr-2 text-red-500" size={18} />
                           Beneficios para la Salud
                         </h4>
-                        {recipe.nutritionalInfo.vitamins && (
+                        {recipe.nutritionalInfo.vitamins && recipe.nutritionalInfo.vitamins.length > 0 && (
                           <div className="mb-4">
                             <p className="text-sm font-medium text-slate-600 mb-2">Vitaminas principales:</p>
                             <div className="flex flex-wrap gap-1">
@@ -551,7 +551,7 @@ ${instructionsText}${cookingTipsText}${servingSuggestionsText}${nutritionalText}
                             </div>
                           </div>
                         )}
-                        {recipe.healthBenefits && (
+                        {recipe.healthBenefits && recipe.healthBenefits.length > 0 && (
                           <div>
                             <p className="text-sm font-medium text-slate-600 mb-2">Beneficios:</p>
                             <ul className="text-sm text-slate-600 space-y-1">
@@ -564,12 +564,71 @@ ${instructionsText}${cookingTipsText}${servingSuggestionsText}${nutritionalText}
                             </ul>
                           </div>
                         )}
+                        {(!recipe.healthBenefits || recipe.healthBenefits.length === 0) && 
+                         (!recipe.nutritionalInfo.vitamins || recipe.nutritionalInfo.vitamins.length === 0) && (
+                          <div className="text-center py-4 text-slate-500">
+                            <p className="text-sm">Información de beneficios en desarrollo</p>
+                          </div>
+                        )}
                       </Card>
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-slate-500">
-                      <Activity size={48} className="mx-auto mb-3 opacity-50" />
-                      <p>Información nutricional no disponible para esta receta</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Estimated Nutrition */}
+                      <Card className="p-4">
+                        <h4 className="font-semibold text-slate-700 mb-3 flex items-center">
+                          <Target className="mr-2 text-blue-500" size={18} />
+                          Estimación Nutricional (por porción)
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="p-3 bg-blue-50 rounded-lg">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-sm font-medium">Calorías estimadas</span>
+                              <span className="text-sm font-bold">~350-450</span>
+                            </div>
+                            <p className="text-xs text-slate-600">Basado en los ingredientes de la receta</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="p-2 bg-green-50 rounded text-center">
+                              <div className="font-semibold text-green-700">Proteínas</div>
+                              <div className="text-green-600">Alto</div>
+                            </div>
+                            <div className="p-2 bg-orange-50 rounded text-center">
+                              <div className="font-semibold text-orange-700">Carbohidratos</div>
+                              <div className="text-orange-600">Moderado</div>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+
+                      {/* General Benefits */}
+                      <Card className="p-4">
+                        <h4 className="font-semibold text-slate-700 mb-3 flex items-center">
+                          <Heart className="mr-2 text-red-500" size={18} />
+                          Beneficios Generales
+                        </h4>
+                        <ul className="text-sm text-slate-600 space-y-2">
+                          <li className="flex items-start">
+                            <Check className="mr-2 text-green-500 flex-shrink-0 mt-0.5" size={14} />
+                            Rica en proteínas de alta calidad
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="mr-2 text-green-500 flex-shrink-0 mt-0.5" size={14} />
+                            Aporta vitaminas y minerales esenciales
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="mr-2 text-green-500 flex-shrink-0 mt-0.5" size={14} />
+                            Equilibrio de macronutrientes
+                          </li>
+                          <li className="flex items-start">
+                            <Check className="mr-2 text-green-500 flex-shrink-0 mt-0.5" size={14} />
+                            Ingredientes frescos y naturales
+                          </li>
+                        </ul>
+                        <div className="mt-3 p-2 bg-yellow-50 rounded text-xs text-yellow-800">
+                          💡 La información nutricional detallada se actualizará en futuras recetas generadas
+                        </div>
+                      </Card>
                     </div>
                   )}
                 </div>

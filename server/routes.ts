@@ -282,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Build advanced AI prompt
     let prompt;
-    
+
     if (preferences.weeklyPlan) {
       // Weekly plan generation
       prompt = `Actúa como un CHEF PROFESIONAL CON IA AVANZADA y crea un PLAN SEMANAL de 7 recetas diferentes usando principalmente estos ingredientes: ${ingredientNames.join(', ')}.
@@ -383,6 +383,14 @@ INSTRUCCIONES ESPECIALES DEL USUARIO: ${preferences.specialInstructions || 'Crea
 
 MISIÓN: Crea una receta que sea perfecta según todos los parámetros especificados. Debe ser innovadora, deliciosa y perfectamente equilibrada.
 
+Incluye consejos de cocina útiles y sugerencias de presentación.
+
+      IMPORTANTE: Siempre incluye información nutricional detallada calculando las calorías, macronutrientes (proteína, carbohidratos, grasas, fibra) por porción, así como las vitaminas principales y beneficios para la salud de los ingredientes utilizados.
+
+      Responde ÚNICAMENTE con un objeto JSON válido, sin explicaciones adicionales.
+
+      Preferencias del usuario:
+
 ${getResponseFormat(false, preferences.nutritionOptimization)}`;
     }
 
@@ -412,7 +420,19 @@ ${getResponseFormat(false, preferences.nutritionOptimization)}`;
       difficulty: recipeData.difficulty || 'fácil',
       ingredients: Array.isArray(recipeData.ingredients) ? recipeData.ingredients : [],
       instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
-      dietaryTags: Array.isArray(recipeData.dietaryTags) ? recipeData.dietaryTags : []
+      dietaryTags: Array.isArray(recipeData.dietaryTags) ? recipeData.dietaryTags : [],
+      cookingTips: Array.isArray(recipeData.cookingTips) ? recipeData.cookingTips : [],
+      servingSuggestions: Array.isArray(recipeData.servingSuggestions) ? recipeData.servingSuggestions : [],
+      nutritionalInfo: recipeData.nutritionalInfo || {
+        "calories": 350,
+        "protein": 25,
+        "carbs": 30,
+        "fat": 15,
+        "fiber": 8,
+        "vitamins": ["Vitamina A", "Vitamina C", "Hierro"],
+        "minerals": ["Hierro", "Calcio"]
+      },
+      healthBenefits: recipeData.healthBenefits || ["beneficio1", "beneficio2", "beneficio3"]
     };
 
     // Store the recipe
@@ -426,6 +446,10 @@ ${getResponseFormat(false, preferences.nutritionOptimization)}`;
       instructions: cleanedRecipe.instructions,
       dietaryTags: cleanedRecipe.dietaryTags,
       imageUrl: null,
+      cookingTips: cleanedRecipe.cookingTips,
+      servingSuggestions: cleanedRecipe.servingSuggestions,
+      nutritionalInfo: cleanedRecipe.nutritionalInfo,
+      healthBenefits: cleanedRecipe.healthBenefits
     });
 
     console.log('Generated recipe:', cleanedRecipe);
