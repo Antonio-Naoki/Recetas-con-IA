@@ -39,7 +39,7 @@ interface CulinaryPreferences {
 export default function Dashboard() {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [currentIngredient, setCurrentIngredient] = useState("");
-  
+
   // Advanced preferences state
   const [preferences, setPreferences] = useState({
     mealType: 'dinner',
@@ -72,7 +72,7 @@ export default function Dashboard() {
   const [nutritionOptimization, setNutritionOptimization] = useState(false);
   const [weeklyPlan, setWeeklyPlan] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState("");
-  
+
   const [generatedRecipeId, setGeneratedRecipeId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("basic");
 
@@ -250,22 +250,22 @@ export default function Dashboard() {
             <div className="absolute inset-0 flex items-center justify-center p-8">
               <div className="text-center text-white">
                 <div className="flex items-center justify-center mb-4">
-                  <Brain className="mr-3 text-yellow-300" size={40} />
-                  <h1 className="text-4xl font-bold drop-shadow-md">Super IA Culinaria</h1>
+                  <Brain className="mr-3 text-green-800" size={40} />
+                  <h1 className="text-4xl font-bold text-green-800 drop-shadow-lg">Super IA Culinaria</h1>
                 </div>
-                <p className="text-xl text-emerald-100 drop-shadow-sm mb-4">
+                <p className="text-xl text-green-800 font-medium drop-shadow-md mb-4">
                   La aplicación de recetas más inteligente del mundo
                 </p>
-                <div className="flex justify-center space-x-6 text-sm">
-                  <div className="flex items-center">
+                <div className="flex justify-center space-x-6 text-sm font-semibold">
+                  <div className="flex items-center text-green-800 drop-shadow-md">
                     <Target className="mr-1" size={16} />
                     Nutrición Optimizada
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center text-green-800 drop-shadow-md">
                     <Globe className="mr-1" size={16} />
                     Sostenible
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center text-green-800 drop-shadow-md">
                     <Zap className="mr-1" size={16} />
                     IA Avanzada
                   </div>

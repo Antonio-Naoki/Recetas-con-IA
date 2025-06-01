@@ -83,7 +83,7 @@ npm run db:push
 npm run dev
 ```
 
-La aplicación estará disponible en: `http://localhost:5000`
+La aplicación estará disponible en: `http://localhost:4000`
 
 ## 📁 Estructura del Proyecto
 
