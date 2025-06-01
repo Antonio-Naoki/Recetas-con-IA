@@ -49,9 +49,6 @@ Edita el archivo `.env` con tus credenciales:
 # Google Gemini AI
 GEMINI_API_KEY=tu_gemini_api_key_aqui
 
-# Base de datos Neon PostgreSQL
-DATABASE_URL=tu_neon_database_url_aqui
-
 # Entorno
 NODE_ENV=development
 ```
@@ -60,18 +57,6 @@ NODE_ENV=development
 1. Ve a [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Crea una nueva API key
 3. Copia la key y pégala en el archivo `.env`
-
-#### Configurar Base de Datos Neon:
-1. Ve a [Neon.tech](https://neon.tech)
-2. Crea una cuenta gratuita
-3. Crea un nuevo proyecto
-4. Copia la connection string y pégala en el archivo `.env`
-
-### 4. Configurar Base de Datos
-
-```bash
-npm run db:push
-```
 
 ### 5. Iniciar el Servidor
 

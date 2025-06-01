@@ -1,4 +1,3 @@
-
 #!/usr/bin/env node
 
 import { execSync } from 'child_process';
@@ -39,30 +38,24 @@ try {
 
 // Verificar archivo .env
 try {
-  if (existsSync(join(__dirname, '.env'))) {
-    const envContent = readFileSync(join(__dirname, '.env'), 'utf8');
-    
-    const hasGeminiKey = envContent.includes('GEMINI_API_KEY=') && 
-                         !envContent.includes('GEMINI_API_KEY=tu_gemini_api_key_aqui');
-    const hasDatabaseUrl = envContent.includes('DATABASE_URL=') && 
-                          !envContent.includes('DATABASE_URL=tu_neon_database_url_aqui');
-    
-    if (hasGeminiKey) {
-      console.log('✅ GEMINI_API_KEY configurada');
-    } else {
-      console.log('❌ GEMINI_API_KEY no configurada correctamente');
-      hasErrors = true;
-    }
-    
-    if (hasDatabaseUrl) {
-      console.log('✅ DATABASE_URL configurada');
-    } else {
-      console.log('❌ DATABASE_URL no configurada correctamente');
-      hasErrors = true;
-    }
-  } else {
-    console.log('❌ Archivo .env no encontrado. Copia .env.example a .env');
+  // Verificar variables de entorno
+  const envPath = join(__dirname, '.env');
+  if (!existsSync(envPath)) {
+    console.log('❌ Archivo .env no encontrado');
+    console.log('   Crea un archivo .env basado en .env.example');
     hasErrors = true;
+  } else {
+    const envContent = readFileSync(envPath, 'utf8');
+
+    // Verificar GEMINI_API_KEY
+    if (!envContent.includes('GEMINI_API_KEY=') || envContent.includes('GEMINI_API_KEY=tu_gemini_api_key_aqui')) {
+      console.log('❌ GEMINI_API_KEY no configurada en .env');
+      hasErrors = true;
+    } else {
+      console.log('✅ GEMINI_API_KEY configurada');
+    }
+
+    console.log('✅ Almacenamiento en memoria (sin base de datos requerida)');
   }
 } catch (error) {
   console.log('❌ Error verificando archivo .env');

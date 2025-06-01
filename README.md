@@ -15,7 +15,7 @@ Una aplicación web inteligente que genera recetas personalizadas basadas en los
 
 - **Frontend**: React 18 + TypeScript + Vite
 - **Backend**: Node.js + Express + TypeScript
-- **Base de datos**: Neon (PostgreSQL) con Drizzle ORM
+- **Almacenamiento**: En memoria (no requiere base de datos)
 - **IA**: Google Gemini AI
 - **UI**: Tailwind CSS + shadcn/ui components
 - **Validación**: Zod schemas
@@ -27,7 +27,6 @@ Antes de comenzar, asegúrate de tener instalado:
 - **Node.js** (versión 18 o superior)
 - **npm** (incluido con Node.js)
 - Una **API key de Google Gemini**
-- Una **base de datos Neon** (PostgreSQL)
 
 ## 🔧 Instalación y Configuración
 
@@ -52,9 +51,6 @@ Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 # Google Gemini AI
 GEMINI_API_KEY=tu_gemini_api_key_aqui
 
-# Base de datos Neon
-DATABASE_URL=tu_neon_database_url_aqui
-
 # Entorno de desarrollo
 NODE_ENV=development
 ```
@@ -63,19 +59,6 @@ NODE_ENV=development
 1. Ve a [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Crea una nueva API key
 3. Copia la key y agrégala al archivo `.env`
-
-#### Configurar base de datos Neon:
-1. Ve a [Neon.tech](https://neon.tech)
-2. Crea una cuenta y un nuevo proyecto
-3. Copia la connection string y agrégala al archivo `.env`
-
-### 4. Configurar la base de datos
-
-Ejecuta las migraciones para crear las tablas necesarias:
-
-```bash
-npm run db:push
-```
 
 ### 5. Iniciar el servidor de desarrollo
 
