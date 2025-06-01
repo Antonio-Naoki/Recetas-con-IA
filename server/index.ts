@@ -56,9 +56,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Changed from port 3000 to port 4000 to avoid conflicts
-  // with other processes that might be using port 3000
-  const port = 4000;
+  // Using port 5000 for Replit deployment compatibility
+  const port = 5000;
   server.listen(port, () => {
     log(`serving on port ${port}`);
   });
