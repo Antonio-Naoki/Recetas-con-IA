@@ -23,6 +23,10 @@ export const recipes = pgTable("recipes", {
   instructions: jsonb("instructions").notNull(), // array of instruction objects
   imageUrl: text("image_url"),
   dietaryTags: jsonb("dietary_tags"), // array of strings like 'vegetarian', 'vegan', etc.
+  nutritionalInfo: jsonb("nutritional_info"), // nutritional information object
+  cookingTips: jsonb("cooking_tips"), // array of cooking tips
+  servingSuggestions: jsonb("serving_suggestions"), // array of serving suggestions
+  healthBenefits: jsonb("health_benefits"), // array of health benefits
   createdAt: timestamp("created_at").defaultNow(),
 });
 

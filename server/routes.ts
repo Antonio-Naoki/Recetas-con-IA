@@ -4,6 +4,7 @@ import multer from "multer";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { storage } from "./storage";
 import { insertIngredientSchema, insertRecipeSchema, insertRecipePreferencesSchema } from "@shared/schema";
+import { calculateNutritionalInfo, generateHealthBenefits } from "./nutritionService";
 import { z } from "zod";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -373,7 +374,7 @@ ${getResponseFormat(false, preferences.nutritionOptimization)}`;
         difficulty: "fácil",
         ingredients: ingredientNames.map(ing => ({
           name: ing,
-          amount: "Al gusto",
+          amount: "100g",
           preparation: "Según necesidades"
         })),
         instructions: [
@@ -386,18 +387,12 @@ ${getResponseFormat(false, preferences.nutritionOptimization)}`;
         ],
         dietaryTags: ["casero"],
         cookingTips: ["Usar ingredientes frescos"],
-        servingSuggestions: ["Servir caliente"],
-        nutritionalInfo: {
-          calories: 350,
-          protein: 25,
-          carbs: 30,
-          fat: 15,
-          fiber: 8,
-          vitamins: ["Vitamina A", "Vitamina C"],
-          minerals: ["Hierro", "Calcio"]
-        },
-        healthBenefits: ["Nutritivo", "Equilibrado", "Saludable"]
+        servingSuggestions: ["Servir caliente"]
       };
+      
+      // Calculate real nutritional information for fallback recipe too
+      recipeData.nutritionalInfo = calculateNutritionalInfo(recipeData);
+      recipeData.healthBenefits = generateHealthBenefits(recipeData);
     }
 
     // Handle weekly plan or single recipe
@@ -414,17 +409,13 @@ ${getResponseFormat(false, preferences.nutritionOptimization)}`;
         dietaryTags: [...(Array.isArray(recipeData.dietaryTags) ? recipeData.dietaryTags : []), 'Plan Semanal'],
         cookingTips: Array.isArray(recipeData.cookingTips) ? recipeData.cookingTips : [],
         servingSuggestions: Array.isArray(recipeData.servingSuggestions) ? recipeData.servingSuggestions : [],
-        nutritionalInfo: recipeData.nutritionalInfo || {
-          "calories": 350,
-          "protein": 25,
-          "carbs": 30,
-          "fat": 15,
-          "fiber": 8,
-          "vitamins": ["Vitamina A", "Vitamina C", "Hierro"],
-          "minerals": ["Hierro", "Calcio"]
-        },
-        healthBenefits: recipeData.healthBenefits || ["Nutritivo", "Equilibrado", "Saludable"]
+        nutritionalInfo: null, // Will be calculated below
+        healthBenefits: null // Will be calculated below
       };
+      
+      // Calculate real nutritional information based on ingredients
+      cleanedRecipe.nutritionalInfo = calculateNutritionalInfo(cleanedRecipe);
+      cleanedRecipe.healthBenefits = generateHealthBenefits(cleanedRecipe);
 
       // Store the recipe
       const newRecipe = await storage.createRecipe({
@@ -458,17 +449,13 @@ ${getResponseFormat(false, preferences.nutritionOptimization)}`;
         dietaryTags: Array.isArray(recipeData.dietaryTags) ? recipeData.dietaryTags : [],
         cookingTips: Array.isArray(recipeData.cookingTips) ? recipeData.cookingTips : [],
         servingSuggestions: Array.isArray(recipeData.servingSuggestions) ? recipeData.servingSuggestions : [],
-        nutritionalInfo: recipeData.nutritionalInfo || {
-          "calories": 350,
-          "protein": 25,
-          "carbs": 30,
-          "fat": 15,
-          "fiber": 8,
-          "vitamins": ["Vitamina A", "Vitamina C", "Hierro"],
-          "minerals": ["Hierro", "Calcio"]
-        },
-        healthBenefits: recipeData.healthBenefits || ["Nutritivo", "Equilibrado", "Saludable"]
+        nutritionalInfo: null, // Will be calculated below
+        healthBenefits: null // Will be calculated below
       };
+      
+      // Calculate real nutritional information based on ingredients
+      cleanedRecipe.nutritionalInfo = calculateNutritionalInfo(cleanedRecipe);
+      cleanedRecipe.healthBenefits = generateHealthBenefits(cleanedRecipe);
 
       // Store the recipe
       const newRecipe = await storage.createRecipe({
